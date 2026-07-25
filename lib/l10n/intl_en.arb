@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "Smart Wallet",
+  "@appTitle": {
+    "description": "Application name shown in the task switcher"
+  }
+}
