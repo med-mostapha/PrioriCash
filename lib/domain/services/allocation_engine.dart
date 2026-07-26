@@ -125,6 +125,26 @@ class AllocationEngine {
     return allocations;
   }
 
+  /// Reverses every not-yet-reversed allocation belonging to [incomeId].
+  ///
+  /// Returns fresh, reversed copies — never mutates or deletes a row, per
+  /// SRS R10 and AGENTS.md §1.4. Allocations already reversed are left
+  /// alone rather than reversed twice.
+  ///
+  /// This only decides WHAT must be undone. Restoring
+  /// ObligationInstance.fundedAmount and SavingsGoal.currentAmount from the
+  /// result is the data layer's job, inside one transaction — see the
+  /// UC-03 sequence diagram.
+  List<Allocation> undo({
+    required String incomeId,
+    required List<Allocation> allocations,
+  }) {
+    return allocations
+        .where((a) => a.incomeId == incomeId && !a.isReversed)
+        .map((a) => a.reverse())
+        .toList(growable: false);
+  }
+
   /// R6: due date ascending, then priority ascending as a tie-breaker.
   void _sortByDueDateThenPriority(
     List<ObligationInstance> list,
