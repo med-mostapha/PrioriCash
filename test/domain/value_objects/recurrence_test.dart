@@ -22,22 +22,24 @@ void main() {
 
     test('rejects a zero interval', () {
       expect(
-        () => const Recurrence(RecurrenceType.daily, interval: 0).occurrencesBetween(
-          anchor: d(2026, 1, 1),
-          from: d(2026, 1, 1),
-          to: d(2026, 1, 5),
-        ),
+        () => const Recurrence(RecurrenceType.daily, interval: 0)
+            .occurrencesBetween(
+              anchor: d(2026, 1, 1),
+              from: d(2026, 1, 1),
+              to: d(2026, 1, 5),
+            ),
         throwsArgumentError,
       );
     });
 
     test('rejects a negative interval', () {
       expect(
-        () => const Recurrence(RecurrenceType.daily, interval: -2).occurrencesBetween(
-          anchor: d(2026, 1, 1),
-          from: d(2026, 1, 1),
-          to: d(2026, 1, 5),
-        ),
+        () => const Recurrence(RecurrenceType.daily, interval: -2)
+            .occurrencesBetween(
+              anchor: d(2026, 1, 1),
+              from: d(2026, 1, 1),
+              to: d(2026, 1, 5),
+            ),
         throwsArgumentError,
       );
     });
