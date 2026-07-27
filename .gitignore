@@ -62,3 +62,4 @@ lib/generated/
 key.properties
 .env
 .env.local
+.vscode/
