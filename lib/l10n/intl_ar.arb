@@ -55,5 +55,13 @@
   "monthSep": "سبتمبر",
   "monthOct": "أكتوبر",
   "monthNov": "نوفمبر",
-  "monthDec": "ديسمبر"
+  "monthDec": "ديسمبر",
+  "fieldSource": "المصدر",
+  "fieldReceivedDate": "تاريخ الاستلام",
+  "fieldNote": "ملاحظة (اختياري)",
+  "sourceGrant": "منحة جامعية",
+  "sourceFamily": "دعم من العائلة",
+  "sourceFreelance": "عمل حر",
+  "sourceGift": "هدية",
+  "sourceOther": "أخرى"
 }

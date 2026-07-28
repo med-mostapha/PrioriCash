@@ -18,6 +18,7 @@ import 'package:prioricash/presentation/widgets/hero_balance_text.dart';
 import 'package:prioricash/presentation/widgets/obligation_list_tile.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
 import 'package:prioricash/presentation/widgets/secondary_action_button.dart';
+import 'package:prioricash/presentation/screens/add_income_screen.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -94,6 +95,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _load();
   }
 
+  Future<void> _openAddIncome() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const AddIncomeScreen()),
+    );
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -162,9 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Expanded(
                     child: PrimaryActionButton(
                       label: l10n.addIncome,
-                      onPressed: () {
-                        // SW-15: opens the add-income flow.
-                      },
+                      onPressed: _openAddIncome,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),

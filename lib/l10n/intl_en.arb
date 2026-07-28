@@ -92,5 +92,22 @@
   "monthSep": "Sep",
   "monthOct": "Oct",
   "monthNov": "Nov",
-  "monthDec": "Dec"
+  "monthDec": "Dec",
+  "fieldSource": "SOURCE",
+  "@fieldSource": {
+    "description": "Add-income form: which source the money came from"
+  },
+  "fieldReceivedDate": "DATE RECEIVED",
+  "@fieldReceivedDate": {
+    "description": "Add-income form: date the money was received"
+  },
+  "fieldNote": "NOTE (OPTIONAL)",
+  "@fieldNote": {
+    "description": "Add-income form: optional free-text note"
+  },
+  "sourceGrant": "University grant",
+  "sourceFamily": "Family support",
+  "sourceFreelance": "Freelance work",
+  "sourceGift": "Gift",
+  "sourceOther": "Other"
 }
