@@ -1,7 +1,96 @@
 {
   "@@locale": "en",
-  "appTitle": "Smart Wallet",
+  "appTitle": "PrioriCash",
   "@appTitle": {
     "description": "Application name shown in the task switcher"
-  }
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Home screen top bar refresh action"
+  },
+  "availableToSpend": "AVAILABLE TO SPEND",
+  "@availableToSpend": {
+    "description": "Home screen hero balance section label"
+  },
+  "afterReserving": "MRU · after reserving {amount}",
+  "@afterReserving": {
+    "description": "Subtitle under the hero balance",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deficitWarning": "Commitments exceed your balance",
+  "@deficitWarning": {
+    "description": "Shown when available balance is negative"
+  },
+  "summaryTotal": "TOTAL",
+  "summaryReserved": "RESERVED",
+  "summaryItems": "ITEMS",
+  "addIncome": "Add income",
+  "askBeforeBuying": "Ask before buying",
+  "upcoming": "UPCOMING",
+  "manage": "Manage",
+  "@manage": {
+    "description": "Link from home screen to obligation management"
+  },
+  "noObligationsYet": "No obligations yet.",
+  "dueInDays": "{count, plural, =0{Due today} =1{Due in 1 day} other{Due in {count} days}}",
+  "@dueInDays": {
+    "description": "Obligation instance due-date caption",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overdue": "Overdue",
+  "obligationsTitle": "Obligations",
+  "@obligationsTitle": {
+    "description": "Obligation management screen header"
+  },
+  "discretionary": "discretionary",
+  "deactivate": "Deactivate",
+  "@discretionary": {
+    "description": "Tag next to a non-essential obligation's name"
+  },
+  "recurrenceWeekly": "Weekly",
+  "recurrenceMonthly": "Monthly",
+  "editObligation": "Edit obligation",
+  "newObligation": "New obligation",
+  "fieldName": "NAME",
+  "fieldNameHint": "e.g. Wi-Fi",
+  "fieldAmount": "AMOUNT (MRU)",
+  "fieldRecurrence": "RECURRENCE",
+  "fieldPriority": "PRIORITY",
+  "fieldStartDate": "START DATE",
+  "fieldEssential": "ESSENTIAL",
+  "priorityHigh": "High",
+  "priorityMedium": "Medium",
+  "priorityLow": "Low",
+  "validationRequired": "Required",
+  "validationMustBePositive": "Must be positive",
+  "validationInvalidAmount": "Invalid amount",
+  "save": "Save",
+  "saving": "Saving…",
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+  "weekdaySun": "Sun",
+  "monthJan": "Jan",
+  "monthFeb": "Feb",
+  "monthMar": "Mar",
+  "monthApr": "Apr",
+  "monthMay": "May",
+  "monthJun": "Jun",
+  "monthJul": "Jul",
+  "monthAug": "Aug",
+  "monthSep": "Sep",
+  "monthOct": "Oct",
+  "monthNov": "Nov",
+  "monthDec": "Dec"
 }
