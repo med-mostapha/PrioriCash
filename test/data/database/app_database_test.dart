@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
+import 'package:prioricash/domain/entities/income.dart' show IncomeSourceId;
 
 /// SW-10 — schema-level tests.
 ///
@@ -197,6 +198,45 @@ void main() {
         ),
         throwsA(isA<sqlite3.SqliteException>()),
       );
+    });
+  });
+
+  group('income_sources is seeded on creation — SW-15a', () {
+    test(
+      'contains exactly one row per IncomeSourceId member, keyed by name',
+      () async {
+        final rows = await db
+            .customSelect(
+              'SELECT id, name, type, is_active FROM income_sources',
+            )
+            .get();
+
+        expect(rows, hasLength(IncomeSourceId.values.length));
+
+        final byId = {
+          for (final row in rows) row.data['id'] as String: row.data,
+        };
+        for (final source in IncomeSourceId.values) {
+          final row = byId[source.name];
+          expect(
+            row,
+            isNotNull,
+            reason: 'expected a seeded row with id "${source.name}"',
+          );
+          expect(row!['name'], source.debugLabel);
+          expect(row['type'], 'system');
+          expect(row['is_active'], 1);
+        }
+      },
+    );
+
+    test('a real income row can be inserted against a seeded source', () async {
+      await db.customStatement(
+        "INSERT INTO incomes (id, source_id, amount_minor, received_at, note) "
+        "VALUES ('inc-1', 'grant', 135000, 0, '')",
+      );
+      final rows = await db.customSelect('SELECT * FROM incomes').get();
+      expect(rows, hasLength(1));
     });
   });
 }

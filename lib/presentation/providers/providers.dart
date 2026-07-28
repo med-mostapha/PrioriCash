@@ -10,6 +10,10 @@ import 'package:prioricash/domain/services/instance_generator.dart';
 /// screen — a real dependency-injection setup belongs to Sprint 2, once
 /// the UI layer is real.
 
+final incomeRepositoryProvider = Provider<DriftIncomeRepository>(
+  (ref) => DriftIncomeRepository(ref.watch(appDatabaseProvider)),
+);
+
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);

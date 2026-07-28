@@ -1,9 +1,11 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart'
-    hide Obligation, Allocation;
+    hide Obligation, Allocation, Income;
 import 'package:prioricash/data/repositories/drift_repositories.dart';
 import 'package:prioricash/domain/entities/allocation.dart';
+import 'package:prioricash/domain/entities/income.dart'
+    show Income, IncomeSourceId;
 import 'package:prioricash/domain/entities/obligation.dart';
 import 'package:prioricash/domain/services/allocation_engine.dart';
 import 'package:prioricash/domain/services/instance_generator.dart';
@@ -89,6 +91,59 @@ void main() {
         expect(active, isEmpty);
         final rows = await db.customSelect('SELECT * FROM obligations').get();
         expect(rows, hasLength(1));
+      },
+    );
+  });
+
+  group('IncomeRepository', () {
+    late DriftIncomeRepository incomeRepo;
+
+    setUp(() {
+      incomeRepo = DriftIncomeRepository(db);
+    });
+
+    test(
+      'insert round-trips all fields, including default empty note',
+      () async {
+        final income = Income(
+          id: 'inc-1',
+          sourceId: IncomeSourceId.grant,
+          amount: Money.fromMinor(135000),
+          receivedAt: d(2026, 7, 1),
+        );
+
+        await incomeRepo.insert(income);
+
+        final row =
+            (await db.customSelect('SELECT * FROM incomes').get()).single;
+        expect(row.data['id'], 'inc-1');
+        expect(row.data['source_id'], 'grant');
+        expect(row.data['amount_minor'], 135000);
+        expect(row.data['note'], '');
+      },
+    );
+
+    test(
+      'insert with a non-grant source and a note round-trips correctly',
+      () async {
+        final income = Income(
+          id: 'inc-2',
+          sourceId: IncomeSourceId.freelance,
+          amount: Money.fromMinor(50000),
+          receivedAt: d(2026, 7, 15),
+          note: 'logo design job',
+        );
+
+        await incomeRepo.insert(income);
+
+        final row =
+            (await db
+                    .customSelect("SELECT * FROM incomes WHERE id = 'inc-2'")
+                    .get())
+                .single;
+        expect(row.data['source_id'], 'freelance');
+        expect(row.data['amount_minor'], 50000);
+        expect(row.data['note'], 'logo design job');
       },
     );
   });

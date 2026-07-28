@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:prioricash/domain/entities/obligation.dart';
+import 'package:prioricash/domain/entities/income.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
-import 'package:prioricash/domain/value_objects/recurrence.dart';
 import 'package:prioricash/generated/l10n.dart';
 import 'package:prioricash/presentation/providers/providers.dart';
 import 'package:prioricash/presentation/theme/app_colors.dart';
@@ -10,60 +9,52 @@ import 'package:prioricash/presentation/theme/app_spacing.dart';
 import 'package:prioricash/presentation/theme/app_typography.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
 
-/// SW-14 — the add/edit obligation form. Pushed via Navigator.push from
-/// ObligationListScreen; pops back to it on save.
+/// SW-15 — the add-income form. Pushed via Navigator.push from HomeScreen;
+/// pops back to it on save.
 ///
-/// When [existing] is null this creates a new obligation with a
-/// generated id. When it is provided, the form edits that obligation in
-/// place (same id, same historical instances — see R16, obligations with
-/// allocations are never deleted, only deactivated).
+/// Runs the full record-income flow that, until now, only existed inside
+/// DebugScreen (SW-12): generate any obligation instances still missing up
+/// to the reservation horizon, record the income, run the allocation
+/// engine, and persist the resulting ledger — all before returning to
+/// HomeScreen, which then reloads and shows the updated balances.
 ///
 /// All user-facing strings come from S.of(context) — see AGENTS.md §2.6.
-class ObligationFormScreen extends ConsumerStatefulWidget {
-  const ObligationFormScreen({this.existing, super.key});
-
-  final Obligation? existing;
+class AddIncomeScreen extends ConsumerStatefulWidget {
+  const AddIncomeScreen({super.key});
 
   @override
-  ConsumerState<ObligationFormScreen> createState() =>
-      _ObligationFormScreenState();
+  ConsumerState<AddIncomeScreen> createState() => _AddIncomeScreenState();
 }
 
-class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
+class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
+  static const _horizonDays = 30;
+
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
+  final _amountController = TextEditingController();
+  final _noteController = TextEditingController();
 
-  late RecurrenceType _recurrenceType;
-  late Priority _priority;
-  late bool _isEssential;
-  late DateTime _startDate;
+  IncomeSourceId _sourceId = IncomeSourceId.grant;
+  DateTime _receivedAt = DateTime.now();
   bool _isSaving = false;
-
-  bool get _isEditing => widget.existing != null;
-
-  @override
-  void initState() {
-    super.initState();
-    final existing = widget.existing;
-    _nameController = TextEditingController(text: existing?.name ?? '');
-    _amountController = TextEditingController(
-      text: existing == null
-          ? ''
-          : (existing.amount.minorUnits / Money.minorUnitsPerMajor)
-                .toStringAsFixed(2),
-    );
-    _recurrenceType = existing?.recurrence.type ?? RecurrenceType.monthly;
-    _priority = existing?.priority ?? Priority.medium;
-    _isEssential = existing?.isEssential ?? true;
-    _startDate = existing?.startDate ?? DateTime.now();
-  }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _amountController.dispose();
+    _noteController.dispose();
     super.dispose();
+  }
+
+  DateTime get _horizonEnd =>
+      DateTime.now().add(const Duration(days: _horizonDays));
+
+  Future<void> _pickReceivedDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _receivedAt,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => _receivedAt = picked);
   }
 
   Future<void> _save() async {
@@ -72,40 +63,72 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     setState(() => _isSaving = true);
 
     final amount = Money.parse(_amountController.text.trim());
-    final id =
-        widget.existing?.id ?? 'ob-${DateTime.now().microsecondsSinceEpoch}';
-
-    final obligation = Obligation(
-      id: id,
-      name: _nameController.text.trim(),
+    final income = Income(
+      id: 'income-${DateTime.now().microsecondsSinceEpoch}',
+      sourceId: _sourceId,
       amount: amount,
-      recurrence: Recurrence(_recurrenceType),
-      priority: _priority,
-      startDate: _startDate,
-      isEssential: _isEssential,
+      receivedAt: _receivedAt,
+      note: _noteController.text.trim(),
     );
 
-    final repo = ref.read(obligationRepositoryProvider);
-    await repo.upsert(obligation);
+    final incomeRepo = ref.read(incomeRepositoryProvider);
+    final obligationRepo = ref.read(obligationRepositoryProvider);
+    final instanceRepo = ref.read(obligationInstanceRepositoryProvider);
+    final goalRepo = ref.read(savingsGoalRepositoryProvider);
+    final allocationRepo = ref.read(allocationRepositoryProvider);
+    final generator = ref.read(instanceGeneratorProvider);
+    final engine = ref.read(allocationEngineProvider);
+
+    // 1. Persist the income row first — the allocation ledger references
+    // incomeId by foreign key, so this must exist before applyAllocations.
+    await incomeRepo.insert(income);
+
+    // 2. Same generate -> allocate -> apply sequence as DebugScreen (SW-12),
+    // now the real flow instead of scaffolding — see DOCS.md §4.3.
+    final obligations = await obligationRepo.getActive();
+    final existing = await instanceRepo.getFundable(_horizonEnd);
+    final newInstances = generator.generateAll(
+      obligations: obligations,
+      horizonEnd: _horizonEnd,
+      existing: existing,
+    );
+    if (newInstances.isNotEmpty) {
+      await instanceRepo.insertAll(newInstances);
+    }
+
+    final fundable = await instanceRepo.getFundable(_horizonEnd);
+    final goals = await goalRepo.getActive();
+    final obligationsById = {for (final o in obligations) o.id: o};
+
+    final allocations = engine.allocate(
+      incomeId: income.id,
+      incomeAmount: income.amount,
+      instances: fundable,
+      obligationsById: obligationsById,
+      goals: goals,
+      today: DateTime.now(),
+    );
+
+    if (allocations.isNotEmpty) {
+      await allocationRepo.applyAllocations(allocations);
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop(true);
-  }
-
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) setState(() => _startDate = picked);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = S.of(context);
+
+    final sourceLabels = <IncomeSourceId, String>{
+      IncomeSourceId.grant: l10n.sourceGrant,
+      IncomeSourceId.family: l10n.sourceFamily,
+      IncomeSourceId.freelance: l10n.sourceFreelance,
+      IncomeSourceId.gift: l10n.sourceGift,
+      IncomeSourceId.other: l10n.sourceOther,
+    };
 
     return Material(
       color: colors.background,
@@ -122,7 +145,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    _isEditing ? l10n.editObligation : l10n.newObligation,
+                    l10n.addIncome,
                     style: AppTypography.screenTitle.copyWith(
                       color: colors.textPrimary,
                     ),
@@ -140,18 +163,11 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.fieldName),
-                      TextFormField(
-                        controller: _nameController,
-                        style: TextStyle(color: colors.textPrimary),
-                        decoration: _inputDecoration(
-                          colors,
-                          l10n.fieldNameHint,
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                            ? l10n.validationRequired
-                            : null,
+                      _FieldLabel(l10n.fieldSource),
+                      _SegmentedChoice<IncomeSourceId>(
+                        value: _sourceId,
+                        options: sourceLabels,
+                        onChanged: (value) => setState(() => _sourceId = value),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
                       _FieldLabel(l10n.fieldAmount),
@@ -178,31 +194,9 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldRecurrence),
-                      _SegmentedChoice<RecurrenceType>(
-                        value: _recurrenceType,
-                        options: {
-                          RecurrenceType.weekly: l10n.recurrenceWeekly,
-                          RecurrenceType.monthly: l10n.recurrenceMonthly,
-                        },
-                        onChanged: (value) =>
-                            setState(() => _recurrenceType = value),
-                      ),
-                      const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldPriority),
-                      _SegmentedChoice<Priority>(
-                        value: _priority,
-                        options: {
-                          Priority.high: l10n.priorityHigh,
-                          Priority.medium: l10n.priorityMedium,
-                          Priority.low: l10n.priorityLow,
-                        },
-                        onChanged: (value) => setState(() => _priority = value),
-                      ),
-                      const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldStartDate),
+                      _FieldLabel(l10n.fieldReceivedDate),
                       InkWell(
-                        onTap: _pickStartDate,
+                        onTap: _pickReceivedDate,
                         child: Container(
                           padding: const EdgeInsetsDirectional.symmetric(
                             vertical: AppSpacing.md,
@@ -216,23 +210,17 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                             ),
                           ),
                           child: Text(
-                            '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
+                            '${_receivedAt.year}-${_receivedAt.month.toString().padLeft(2, '0')}-${_receivedAt.day.toString().padLeft(2, '0')}',
                             style: TextStyle(color: colors.textPrimary),
                           ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _FieldLabel(l10n.fieldEssential),
-                          Switch(
-                            value: _isEssential,
-                            activeThumbColor: colors.primary,
-                            onChanged: (value) =>
-                                setState(() => _isEssential = value),
-                          ),
-                        ],
+                      _FieldLabel(l10n.fieldNote),
+                      TextFormField(
+                        controller: _noteController,
+                        style: TextStyle(color: colors.textPrimary),
+                        decoration: _inputDecoration(colors, ''),
                       ),
                       const SizedBox(height: AppSpacing.gapSection),
                     ],
@@ -307,6 +295,7 @@ class _SegmentedChoice<T> extends StatelessWidget {
 
     return Wrap(
       spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: options.entries.map((entry) {
         final selected = entry.key == value;
         return ChoiceChip(

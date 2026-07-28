@@ -24,6 +24,11 @@ abstract final class AppTypography {
     fontWeight: FontWeight.w500,
   );
 
+  static const screenTitle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+  );
+
   static const warning = TextStyle(fontSize: 13);
 
   static const buttonLabel = TextStyle(
