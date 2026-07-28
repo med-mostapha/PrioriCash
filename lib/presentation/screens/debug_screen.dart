@@ -4,6 +4,7 @@ import 'package:prioricash/domain/entities/obligation.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/value_objects/recurrence.dart';
 import 'package:prioricash/presentation/providers/providers.dart';
+import 'package:prioricash/presentation/screens/home_screen.dart';
 
 /// SW-12 — Debug screen.
 ///
@@ -166,7 +167,20 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PrioriCash — Debug')),
+      appBar: AppBar(
+        title: const Text('PrioriCash — Debug'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Preview home screen',
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
