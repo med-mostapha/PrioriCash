@@ -109,5 +109,22 @@
   "sourceFamily": "Family support",
   "sourceFreelance": "Freelance work",
   "sourceGift": "Gift",
-  "sourceOther": "Other"
+  "sourceOther": "Other",
+  "fieldPrice": "PRICE (MRU)",
+  "@fieldPrice": {
+    "description": "Purchase advisor dialog: proposed item price"
+  },
+  "check": "Check",
+  "@check": {
+    "description": "Purchase advisor dialog: run the evaluation"
+  },
+  "close": "Close",
+  "purchaseVerdictSafeTitle": "Safe to buy",
+  "purchaseVerdictSafeDetail": "This won't affect your commitments.",
+  "purchaseVerdictTightTitle": "Tight, but doable",
+  "purchaseVerdictTightDetail": "This uses most of what's available — little room left.",
+  "purchaseVerdictBreaksTitle": "This breaks obligations",
+  "purchaseVerdictBreaksDetail": "The following would go underfunded:",
+  "purchaseNoAvailableSnapshot": "Balances are still loading — try again in a moment.",
+  "purchaseVerdictBreaksEmptyDetail": "This exceeds what's available, though you have no unfunded commitments to point to right now."
 }
