@@ -8,6 +8,7 @@ import 'package:prioricash/domain/repositories/repositories.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/value_objects/recurrence.dart' as domain;
 import 'package:prioricash/domain/entities/income.dart' as domain;
+import 'package:prioricash/domain/entities/expense.dart' as domain;
 
 /// Drift implementations of the domain repository interfaces.
 ///
@@ -15,6 +16,27 @@ import 'package:prioricash/domain/entities/income.dart' as domain;
 /// rows (generated classes). Mapping happens in both directions here and
 /// nowhere else — domain code never sees a Drift type, and Drift code
 /// never sees a domain entity directly on the wire.
+
+class DriftExpenseRepository implements ExpenseRepository {
+  DriftExpenseRepository(this._db);
+  final AppDatabase _db;
+
+  @override
+  Future<void> insert(domain.Expense expense) {
+    return _db
+        .into(_db.expenses)
+        .insert(
+          ExpensesCompanion.insert(
+            id: expense.id,
+            categoryId: expense.categoryId.name,
+            amountMinor: expense.amount.minorUnits,
+            spentAt: expense.spentAt,
+            instanceId: Value(expense.instanceId),
+            isReconciliation: Value(expense.isReconciliation),
+          ),
+        );
+  }
+}
 
 class DriftIncomeRepository implements IncomeRepository {
   DriftIncomeRepository(this._db);

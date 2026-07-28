@@ -4,6 +4,7 @@ import 'package:prioricash/domain/entities/obligation_instance.dart';
 import 'package:prioricash/domain/entities/savings_goal.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/entities/income.dart';
+import 'package:prioricash/domain/entities/expense.dart';
 
 /// Abstract repository contracts.
 ///
@@ -63,4 +64,11 @@ abstract class IncomeRepository {
   /// exist as a row in income_sources — seeded once when the database is
   /// created (see app_database.dart's onCreate).
   Future<void> insert(Income income);
+}
+
+abstract class ExpenseRepository {
+  /// Persists [expense]. Its [Expense.categoryId] is guaranteed to already
+  /// exist as a row in categories — seeded once when the database is
+  /// created (see app_database.dart's onCreate).
+  Future<void> insert(Expense expense);
 }
