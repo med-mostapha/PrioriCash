@@ -17,6 +17,7 @@ class SmartWalletApp extends StatelessWidget {
     return MaterialApp(
       onGenerateTitle: (context) => S.of(context).appTitle,
       theme: AppTheme.dark,
+      debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         S.delegate,
         GlobalMaterialLocalizations.delegate,
