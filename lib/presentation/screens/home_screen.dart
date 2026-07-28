@@ -19,6 +19,7 @@ import 'package:prioricash/presentation/widgets/obligation_list_tile.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
 import 'package:prioricash/presentation/widgets/secondary_action_button.dart';
 import 'package:prioricash/presentation/screens/add_income_screen.dart';
+import 'package:prioricash/presentation/widgets/purchase_advice_dialog.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -93,6 +94,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       MaterialPageRoute<void>(builder: (_) => const ObligationListScreen()),
     );
     await _load();
+  }
+
+  Future<void> _openPurchaseAdvisor() async {
+    final snapshot = _snapshot;
+    if (snapshot == null) return;
+    await showPurchaseAdviceDialog(
+      context,
+      available: snapshot.available,
+      instances: snapshot.upcoming,
+      obligationsById: snapshot.obligationsById,
+      today: _today,
+    );
   }
 
   Future<void> _openAddIncome() async {
@@ -177,9 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Expanded(
                     child: SecondaryActionButton(
                       label: l10n.askBeforeBuying,
-                      onPressed: () {
-                        // SW-13 UI: opens the purchase-advisor dialog.
-                      },
+                      onPressed: _openPurchaseAdvisor,
                     ),
                   ),
                 ],

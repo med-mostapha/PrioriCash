@@ -63,5 +63,16 @@
   "sourceFamily": "دعم من العائلة",
   "sourceFreelance": "عمل حر",
   "sourceGift": "هدية",
-  "sourceOther": "أخرى"
+  "sourceOther": "أخرى",
+  "fieldPrice": "السعر (أوقية)",
+  "check": "تحقق",
+  "close": "إغلاق",
+  "purchaseVerdictSafeTitle": "آمن للشراء",
+  "purchaseVerdictSafeDetail": "هذا لن يؤثر على التزاماتك.",
+  "purchaseVerdictTightTitle": "ضيق، لكن ممكن",
+  "purchaseVerdictTightDetail": "هذا يستهلك معظم المتاح — يبقى مجال ضيق جدًا.",
+  "purchaseVerdictBreaksTitle": "هذا سيُخلّ بالتزاماتك",
+  "purchaseVerdictBreaksDetail": "هذه الالتزامات ستبقى غير ممولة:",
+  "purchaseNoAvailableSnapshot": "الأرصدة لسه قيد التحميل — حاول بعد لحظة.",
+  "purchaseVerdictBreaksEmptyDetail": "هذا يتجاوز المتاح، رغم إنه ما عندك التزامات غير ممولة حاليًا تحديدًا."
 }
