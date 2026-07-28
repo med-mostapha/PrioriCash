@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:prioricash/data/database/tables.dart';
+import 'package:prioricash/domain/entities/expense.dart' show CategoryId;
 import 'package:prioricash/domain/entities/income.dart' show IncomeSourceId;
 part 'app_database.g.dart';
 
@@ -45,6 +46,7 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (m) async {
       await m.createAll();
       await _seedIncomeSources(this);
+      await _seedCategories(this);
     },
   );
 
@@ -66,6 +68,21 @@ class AppDatabase extends _$AppDatabase {
             id: source.name,
             name: source.debugLabel,
             type: 'system',
+          ),
+      ]);
+    });
+  }
+
+  /// Populates `categories` with one row per [CategoryId] member, run once
+  /// as part of database creation — same rationale as [_seedIncomeSources],
+  /// mirrored for `Expense.categoryId` (SW-17).
+  Future<void> _seedCategories(AppDatabase db) {
+    return db.batch((batch) {
+      batch.insertAll(db.categories, [
+        for (final category in CategoryId.values)
+          CategoriesCompanion.insert(
+            id: category.name,
+            name: category.debugLabel,
           ),
       ]);
     });

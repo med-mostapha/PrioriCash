@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
+import 'package:prioricash/domain/entities/expense.dart' show CategoryId;
 import 'package:prioricash/domain/entities/income.dart' show IncomeSourceId;
 
 /// SW-10 — schema-level tests.
@@ -238,5 +239,43 @@ void main() {
       final rows = await db.customSelect('SELECT * FROM incomes').get();
       expect(rows, hasLength(1));
     });
+  });
+
+  group('categories is seeded on creation — SW-17', () {
+    test(
+      'contains exactly one row per CategoryId member, keyed by name',
+      () async {
+        final rows = await db
+            .customSelect('SELECT id, name, icon FROM categories')
+            .get();
+
+        expect(rows, hasLength(CategoryId.values.length));
+
+        final byId = {
+          for (final row in rows) row.data['id'] as String: row.data,
+        };
+        for (final category in CategoryId.values) {
+          final row = byId[category.name];
+          expect(
+            row,
+            isNotNull,
+            reason: 'expected a seeded row with id "${category.name}"',
+          );
+          expect(row!['name'], category.debugLabel);
+        }
+      },
+    );
+
+    test(
+      'a real expense row can be inserted against a seeded category',
+      () async {
+        await db.customStatement(
+          "INSERT INTO expenses (id, category_id, amount_minor, spent_at, is_reconciliation) "
+          "VALUES ('exp-1', 'food', 4000, 0, 0)",
+        );
+        final rows = await db.customSelect('SELECT * FROM expenses').get();
+        expect(rows, hasLength(1));
+      },
+    );
   });
 }
