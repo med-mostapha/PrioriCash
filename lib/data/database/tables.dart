@@ -72,11 +72,15 @@ class ObligationInstances extends Table {
 /// The full entity (name, isActive, CRUD) lands in SW-19.
 class SavingsGoals extends Table {
   TextColumn get id => text()();
+  TextColumn get name => text()();
   IntColumn get targetMinor => integer()();
   IntColumn get currentMinor => integer().withDefault(const Constant(0))();
 
   /// Priority.index — same tie-breaker semantics as Obligations.priority.
   IntColumn get priority => integer()();
+
+  /// Deactivated rather than deleted — R16, same as Obligations.isActive.
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
