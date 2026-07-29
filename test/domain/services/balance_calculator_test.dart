@@ -73,7 +73,8 @@ void main() {
       expect(reserved, equals(Money.fromMinor(40000)));
     });
 
-    test('excludes an instance already fully funded', () {
+    test('a fully-funded, unpaid instance with nothing actually spent yet '
+        'reserves the full funded amount — SW-18', () {
       final instances = [
         instance(
           id: 'i-1',
@@ -86,6 +87,71 @@ void main() {
       final reserved = calculator.reservedAmount(
         instances: instances,
         horizonEnd: horizonEnd,
+      );
+
+      // No actualSpentByInstance entry — nothing recorded as spent, so
+      // none of it is safe to release. This replaces the old rule that
+      // dropped a fully-funded instance from reserved unconditionally.
+      expect(reserved, equals(Money.fromMinor(100000)));
+    });
+
+    test('a fully-funded, unpaid instance reserves only what has not '
+        'actually been spent yet — SW-18', () {
+      final instances = [
+        instance(
+          id: 'i-1',
+          dueDate: d(2026, 3, 20),
+          amountMinor: 100000,
+          fundedMinor: 100000,
+        ),
+      ];
+
+      final reserved = calculator.reservedAmount(
+        instances: instances,
+        horizonEnd: horizonEnd,
+        actualSpentByInstance: {'i-1': Money.fromMinor(40000)},
+      );
+
+      expect(reserved, equals(Money.fromMinor(60000)));
+    });
+
+    test(
+      'a fully-funded, unpaid instance fully spent reserves nothing — SW-18',
+      () {
+        final instances = [
+          instance(
+            id: 'i-1',
+            dueDate: d(2026, 3, 20),
+            amountMinor: 100000,
+            fundedMinor: 100000,
+          ),
+        ];
+
+        final reserved = calculator.reservedAmount(
+          instances: instances,
+          horizonEnd: horizonEnd,
+          actualSpentByInstance: {'i-1': Money.fromMinor(100000)},
+        );
+
+        expect(reserved, equals(Money.zero));
+      },
+    );
+
+    test('spending recorded beyond the funded amount never reserves negative '
+        '— SW-18', () {
+      final instances = [
+        instance(
+          id: 'i-1',
+          dueDate: d(2026, 3, 20),
+          amountMinor: 100000,
+          fundedMinor: 100000,
+        ),
+      ];
+
+      final reserved = calculator.reservedAmount(
+        instances: instances,
+        horizonEnd: horizonEnd,
+        actualSpentByInstance: {'i-1': Money.fromMinor(150000)},
       );
 
       expect(reserved, equals(Money.zero));
