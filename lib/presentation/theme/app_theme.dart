@@ -46,6 +46,10 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colors.primary,
+        foregroundColor: colors.textPrimary,
+      ),
       textTheme: TextTheme(bodyMedium: TextStyle(color: colors.textPrimary)),
     );
   }

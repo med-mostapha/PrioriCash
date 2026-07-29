@@ -126,5 +126,15 @@
   "purchaseVerdictBreaksTitle": "This breaks obligations",
   "purchaseVerdictBreaksDetail": "The following would go underfunded:",
   "purchaseNoAvailableSnapshot": "Balances are still loading — try again in a moment.",
-  "purchaseVerdictBreaksEmptyDetail": "This exceeds what's available, though you have no unfunded commitments to point to right now."
+  "purchaseVerdictBreaksEmptyDetail": "This exceeds what's available, though you have no unfunded commitments to point to right now.",
+  "commitmentsExceedBalance": "Commitments exceed your balance",
+  "quickAddExpense": "Quick add expense",
+  "fieldCategory": "CATEGORY",
+  "fieldLinkToObligation": "LINK TO A COMMITMENT (OPTIONAL)",
+  "linkToObligationNone": "None — unlinked spending",
+  "categoryFood": "Food",
+  "categoryTransport": "Transport",
+  "categoryUtilities": "Utilities",
+  "categoryHealth": "Health",
+  "categoryOther": "Other"
 }
