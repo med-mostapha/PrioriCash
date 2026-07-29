@@ -211,17 +211,44 @@ class DriftSavingsGoalRepository implements SavingsGoalRepository {
 
   @override
   Future<List<domain.SavingsGoal>> getActive() async {
-    final rows = await _db.select(_db.savingsGoals).get();
-    return rows
-        .map(
-          (row) => domain.SavingsGoal(
-            id: row.id,
-            targetAmount: Money.fromMinor(row.targetMinor),
-            currentAmount: Money.fromMinor(row.currentMinor),
-            priority: domain.Priority.values[row.priority],
+    final rows = await (_db.select(
+      _db.savingsGoals,
+    )..where((t) => t.isActive.equals(true))).get();
+    return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Future<void> upsert(domain.SavingsGoal goal) async {
+    await _db
+        .into(_db.savingsGoals)
+        .insertOnConflictUpdate(
+          SavingsGoalsCompanion.insert(
+            id: goal.id,
+            name: goal.name,
+            targetMinor: goal.targetAmount.minorUnits,
+            currentMinor: Value(goal.currentAmount.minorUnits),
+            priority: goal.priority.index,
+            isActive: Value(goal.isActive),
           ),
-        )
-        .toList();
+        );
+  }
+
+  @override
+  Future<void> deactivate(String id) async {
+    await (_db.update(_db.savingsGoals)..where((t) => t.id.equals(id))).write(
+      const SavingsGoalsCompanion(isActive: Value(false)),
+    );
+  }
+
+  domain.SavingsGoal _toDomain(SavingsGoal row) {
+    return domain.SavingsGoal(
+      id: row.id,
+      name: row.name,
+      targetAmount: Money.fromMinor(row.targetMinor),
+      currentAmount: Money.fromMinor(row.currentMinor),
+      priority: domain.Priority.values[row.priority],
+      isActive: row.isActive,
+    );
   }
 }
 
