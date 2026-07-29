@@ -13,20 +13,18 @@ class ObligationListTile extends StatelessWidget {
     required this.fundedFraction,
     this.isOverdue = false,
     this.isLast = false,
+    this.onTap,
     super.key,
   });
 
   final String name;
-
   final String dueCaption;
-
   final Money amount;
-
   final double fundedFraction;
-
   final bool isOverdue;
-
   final bool isLast;
+
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +34,7 @@ class ObligationListTile extends StatelessWidget {
         : colors.primary;
     final captionColor = isOverdue ? colors.danger : colors.textSecondary;
 
-    return Container(
+    final content = Container(
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -102,5 +100,6 @@ class ObligationListTile extends StatelessWidget {
         ],
       ),
     );
+    return onTap == null ? content : InkWell(onTap: onTap, child: content);
   }
 }
