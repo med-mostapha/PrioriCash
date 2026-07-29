@@ -24,13 +24,21 @@ abstract class ObligationRepository {
 }
 
 abstract class ObligationInstanceRepository {
-  /// Every instance due on or before [horizonEnd], with no lower date
-  /// bound — R3/R4. Overdue instances (due date in the past) must be
-  /// included, or accumulated overdue commitments silently vanish from
-  /// both the allocation candidate set and the reserved-amount total.
   Future<List<ObligationInstance>> getFundable(DateTime horizonEnd);
 
+  /// Fully funded but not yet confirmed paid — SW-18. No date bound: a
+  /// reconciliation-pending instance stays visible regardless of how long
+  /// ago it was funded, since the money is still committed until the user
+  /// confirms it.
+  Future<List<ObligationInstance>> getFundedUnpaid();
+
   Future<void> insertAll(List<ObligationInstance> instances);
+
+  /// Confirms [instanceId]'s money actually left the account — SW-18.
+  /// Callers must validate via ObligationInstance.markPaid() first (it
+  /// throws if not fully funded or already paid); this just persists the
+  /// flag.
+  Future<void> markPaid(String instanceId);
 }
 
 abstract class SavingsGoalRepository {
@@ -67,8 +75,9 @@ abstract class IncomeRepository {
 }
 
 abstract class ExpenseRepository {
-  /// Persists [expense]. Its [Expense.categoryId] is guaranteed to already
-  /// exist as a row in categories — seeded once when the database is
-  /// created (see app_database.dart's onCreate).
   Future<void> insert(Expense expense);
+
+  /// Sum of recorded expenses grouped by linked instanceId — feeds
+  /// BalanceCalculator.reservedAmount's actualSpentByInstance (SW-18).
+  Future<Map<String, Money>> getTotalsByInstance();
 }

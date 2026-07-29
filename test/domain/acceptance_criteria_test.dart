@@ -397,10 +397,12 @@ void main() {
             incomeId: 'inc-1',
             allocations: allocations,
           );
-
           expect(funded.every((i) => i.isFullyFunded), isTrue);
-          expect(reserved, equals(Money.zero));
-          expect(available, equals(Money.fromMinor(100000)));
+          // SW-18: fully funded but not yet paid still reserves the full
+          // funded amount until actual spending against it is recorded —
+          // no actualSpentByInstance data here means "nothing spent yet".
+          expect(reserved, equals(Money.fromMinor(100000)));
+          expect(available, equals(Money.zero));
           expect(undone.single.isReversed, isTrue);
         },
       );

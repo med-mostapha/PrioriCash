@@ -208,7 +208,76 @@ void main() {
       expect(fundable, isEmpty);
     });
   });
+  test('getFundedUnpaid returns a fully-funded, unpaid instance', () async {
+    final ob = Obligation(
+      id: 'ob-1',
+      name: 'Wi-Fi',
+      amount: Money.fromMinor(50000),
+      recurrence: const Recurrence(RecurrenceType.monthly),
+      priority: Priority.high,
+      startDate: d(2026, 3, 5),
+    );
+    await obligationRepo.upsert(ob);
+    final instances = generator.generate(
+      obligation: ob,
+      horizonEnd: d(2026, 3, 31),
+      existing: const [],
+    );
+    final funded = instances.single.applyFunding(Money.fromMinor(50000));
+    await instanceRepo.insertAll([funded]);
 
+    final result = await instanceRepo.getFundedUnpaid();
+
+    expect(result, hasLength(1));
+    expect(result.single.id, equals(funded.id));
+  });
+
+  test('getFundedUnpaid excludes a partially funded instance', () async {
+    final ob = Obligation(
+      id: 'ob-1',
+      name: 'Wi-Fi',
+      amount: Money.fromMinor(50000),
+      recurrence: const Recurrence(RecurrenceType.monthly),
+      priority: Priority.high,
+      startDate: d(2026, 3, 5),
+    );
+    await obligationRepo.upsert(ob);
+    final instances = generator.generate(
+      obligation: ob,
+      horizonEnd: d(2026, 3, 31),
+      existing: const [],
+    );
+    final partial = instances.single.applyFunding(Money.fromMinor(20000));
+    await instanceRepo.insertAll([partial]);
+
+    final result = await instanceRepo.getFundedUnpaid();
+
+    expect(result, isEmpty);
+  });
+
+  test('markPaid removes the instance from getFundedUnpaid', () async {
+    final ob = Obligation(
+      id: 'ob-1',
+      name: 'Wi-Fi',
+      amount: Money.fromMinor(50000),
+      recurrence: const Recurrence(RecurrenceType.monthly),
+      priority: Priority.high,
+      startDate: d(2026, 3, 5),
+    );
+    await obligationRepo.upsert(ob);
+    final instances = generator.generate(
+      obligation: ob,
+      horizonEnd: d(2026, 3, 31),
+      existing: const [],
+    );
+    final funded = instances.single.applyFunding(Money.fromMinor(50000));
+    await instanceRepo.insertAll([funded]);
+
+    await instanceRepo.markPaid(funded.id);
+    final result = await instanceRepo.getFundedUnpaid();
+
+    expect(result, isEmpty);
+  });
   group('AllocationRepository — transactional apply and reversal', () {
     test(
       'applyAllocations persists the ledger and funds the target instance',
@@ -350,7 +419,74 @@ void main() {
     setUp(() {
       expenseRepo = DriftExpenseRepository(db);
     });
+    test(
+      'getTotalsByInstance sums linked expenses per instance, ignoring unlinked ones',
+      () async {
+        final ob = Obligation(
+          id: 'ob-breakfast',
+          name: 'Breakfast',
+          amount: Money.fromMinor(110000),
+          recurrence: const Recurrence(RecurrenceType.monthly),
+          priority: Priority.medium,
+          startDate: d(2026, 7, 1),
+        );
+        await obligationRepo.upsert(ob);
+        final instances = generator.generate(
+          obligation: ob,
+          horizonEnd: d(2026, 7, 31),
+          existing: const [],
+        );
+        await instanceRepo.insertAll(instances);
+        final instanceId = instances.single.id;
 
+        await expenseRepo.insert(
+          Expense(
+            id: 'exp-1',
+            categoryId: CategoryId.food,
+            amount: Money.fromMinor(4000),
+            spentAt: d(2026, 7, 10),
+            instanceId: instanceId,
+          ),
+        );
+        await expenseRepo.insert(
+          Expense(
+            id: 'exp-2',
+            categoryId: CategoryId.food,
+            amount: Money.fromMinor(3500),
+            spentAt: d(2026, 7, 15),
+            instanceId: instanceId,
+          ),
+        );
+        await expenseRepo.insert(
+          Expense(
+            id: 'exp-3',
+            categoryId: CategoryId.other,
+            amount: Money.fromMinor(9999),
+            spentAt: d(2026, 7, 20),
+          ),
+        );
+
+        final totals = await expenseRepo.getTotalsByInstance();
+
+        expect(totals, hasLength(1));
+        expect(totals[instanceId], equals(Money.fromMinor(7500)));
+      },
+    );
+
+    test('getTotalsByInstance is empty when nothing is linked', () async {
+      await expenseRepo.insert(
+        Expense(
+          id: 'exp-1',
+          categoryId: CategoryId.other,
+          amount: Money.fromMinor(1000),
+          spentAt: d(2026, 7, 10),
+        ),
+      );
+
+      final totals = await expenseRepo.getTotalsByInstance();
+
+      expect(totals, isEmpty);
+    });
     test('insert round-trips all fields, unlinked by default', () async {
       final expense = Expense(
         id: 'exp-1',

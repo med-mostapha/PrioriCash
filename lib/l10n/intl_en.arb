@@ -136,5 +136,11 @@
   "categoryTransport": "Transport",
   "categoryUtilities": "Utilities",
   "categoryHealth": "Health",
-  "categoryOther": "Other"
+  "categoryOther": "Other",
+  "awaitingConfirmation": "Funded — tap to confirm",
+  "reconciliationEstimatedLabel": "Estimated",
+  "reconciliationActualLabel": "Actually spent",
+  "reconciliationSurplusLabel": "Unspent — will be released back to your balance",
+  "reconciliationDeficitLabel": "Overspent beyond the estimate",
+  "markAsPaid": "Mark as paid"
 }

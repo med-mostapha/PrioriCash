@@ -84,5 +84,11 @@
   "categoryTransport": "مواصلات",
   "categoryUtilities": "خدمات",
   "categoryHealth": "صحة",
-  "categoryOther": "أخرى"
+  "categoryOther": "أخرى",
+  "awaitingConfirmation": "ممول — اضغط للتأكيد",
+  "reconciliationEstimatedLabel": "المقدّر",
+  "reconciliationActualLabel": "المصروف فعليًا",
+  "reconciliationSurplusLabel": "غير منفق — سيُعاد للرصيد المتاح",
+  "reconciliationDeficitLabel": "تجاوز الإنفاق المقدّر",
+  "markAsPaid": "تعليم كمدفوع"
 }

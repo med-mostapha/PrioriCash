@@ -67,10 +67,19 @@ class _QuickAddExpenseScreenState extends ConsumerState<QuickAddExpenseScreen> {
     final name =
         widget.obligationsById[instance.obligationId]?.name ??
         instance.obligationId;
-    final overdue = instance.isOverdue(DateTime.now());
-    final caption = overdue
-        ? l10n.overdue
-        : l10n.dueInDays(instance.daysUntilDue(DateTime.now()));
+    final today = DateTime.now();
+
+    // Same three-way caption logic as HomeScreen._buildTile (SW-18) —
+    // isOverdue() returns false once fully funded, so that case must be
+    // checked first or it falls through to a negative day count.
+    final String caption;
+    if (instance.isFullyFunded && !instance.isPaid) {
+      caption = l10n.awaitingConfirmation;
+    } else if (instance.isOverdue(today)) {
+      caption = l10n.overdue;
+    } else {
+      caption = l10n.dueInDays(instance.daysUntilDue(today));
+    }
     return '$name — $caption';
   }
 

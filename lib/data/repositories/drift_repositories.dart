@@ -22,6 +22,22 @@ class DriftExpenseRepository implements ExpenseRepository {
   final AppDatabase _db;
 
   @override
+  Future<Map<String, Money>> getTotalsByInstance() async {
+    final rows = await _db
+        .customSelect(
+          'SELECT instance_id, SUM(amount_minor) AS total FROM expenses '
+          'WHERE instance_id IS NOT NULL GROUP BY instance_id',
+        )
+        .get();
+    return {
+      for (final row in rows)
+        row.data['instance_id'] as String: Money.fromMinor(
+          row.data['total'] as int,
+        ),
+    };
+  }
+
+  @override
   Future<void> insert(domain.Expense expense) {
     return _db
         .into(_db.expenses)
@@ -135,6 +151,25 @@ class DriftObligationInstanceRepository
             ))
             .get();
     return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Future<List<domain.ObligationInstance>> getFundedUnpaid() async {
+    final rows =
+        await (_db.select(_db.obligationInstances)..where(
+              (t) =>
+                  t.isPaid.equals(false) &
+                  t.fundedMinor.isBiggerOrEqual(t.amountMinor),
+            ))
+            .get();
+    return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Future<void> markPaid(String instanceId) {
+    return (_db.update(_db.obligationInstances)
+          ..where((t) => t.id.equals(instanceId)))
+        .write(const ObligationInstancesCompanion(isPaid: Value(true)));
   }
 
   @override

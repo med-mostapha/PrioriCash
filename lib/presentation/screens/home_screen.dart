@@ -21,6 +21,7 @@ import 'package:prioricash/presentation/widgets/secondary_action_button.dart';
 import 'package:prioricash/presentation/screens/add_income_screen.dart';
 import 'package:prioricash/presentation/widgets/purchase_advice_dialog.dart';
 import 'package:prioricash/presentation/screens/quick_add_expense_screen.dart';
+import 'package:prioricash/presentation/widgets/reconciliation_dialog.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -60,22 +61,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final obligationRepo = ref.read(obligationRepositoryProvider);
     final instanceRepo = ref.read(obligationInstanceRepositoryProvider);
+    final expenseRepo = ref.read(expenseRepositoryProvider);
     final balanceRepo = ref.read(balanceRepositoryProvider);
     final calculator = ref.read(balanceCalculatorProvider);
 
     final obligations = await obligationRepo.getActive();
     final fundable = await instanceRepo.getFundable(_horizonEnd);
+    // SW-18: fully funded but not yet confirmed paid — still needs
+    // attention (reconciliation) and still reserves whatever hasn't
+    // actually been spent yet, so it's fetched and merged alongside the
+    // instances that still need money.
+    final fundedUnpaid = await instanceRepo.getFundedUnpaid();
+    final actualSpentByInstance = await expenseRepo.getTotalsByInstance();
     final total = await balanceRepo.getTotalBalance();
+
+    final reservable = [...fundable, ...fundedUnpaid];
     final reserved = calculator.reservedAmount(
-      instances: fundable,
+      instances: reservable,
       horizonEnd: _horizonEnd,
+      actualSpentByInstance: actualSpentByInstance,
     );
     final available = calculator.availableBalance(
       total: total,
       reserved: reserved,
     );
 
-    fundable.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    final upcoming = [...fundable, ...fundedUnpaid]
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
     if (!mounted) return;
     setState(() {
@@ -83,8 +95,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         total: total,
         reserved: reserved,
         available: available,
-        upcoming: fundable,
+        upcoming: upcoming,
         obligationsById: {for (final o in obligations) o.id: o},
+        actualSpentByInstance: actualSpentByInstance,
       );
       _isLoading = false;
     });
@@ -126,6 +139,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           obligationsById: snapshot.obligationsById,
         ),
       ),
+    );
+    await _load();
+  }
+
+  Future<void> _openReconciliation(ObligationInstance instance) async {
+    final snapshot = _snapshot;
+    if (snapshot == null) return;
+    final name =
+        snapshot.obligationsById[instance.obligationId]?.name ??
+        instance.obligationId;
+    final actualSpent =
+        snapshot.actualSpentByInstance[instance.id] ?? Money.zero;
+
+    await showReconciliationDialog(
+      context,
+      obligationName: name,
+      estimated: instance.amount,
+      actualSpent: actualSpent,
+      onConfirmPaid: () =>
+          ref.read(obligationInstanceRepositoryProvider).markPaid(instance.id),
     );
     await _load();
   }
@@ -273,7 +306,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final overdue = instance.isOverdue(_today);
     final daysUntil = instance.daysUntilDue(_today);
 
-    final caption = overdue ? l10n.overdue : l10n.dueInDays(daysUntil);
+    // SW-18: fully funded but not yet confirmed paid gets its own caption
+    // and becomes tappable to open reconciliation — distinct from still
+    // being funded (overdue / due in X days).
+    final awaitingConfirmation = instance.isFullyFunded && !instance.isPaid;
+
+    final caption = awaitingConfirmation
+        ? l10n.awaitingConfirmation
+        : overdue
+        ? l10n.overdue
+        : l10n.dueInDays(daysUntil);
 
     final fundedFraction = instance.amount.minorUnits == 0
         ? 0.0
@@ -290,8 +332,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       dueCaption: caption,
       amount: instance.amount,
       fundedFraction: fundedFraction,
-      isOverdue: overdue,
+      isOverdue: overdue && !awaitingConfirmation,
       isLast: isLast,
+      onTap: awaitingConfirmation ? () => _openReconciliation(instance) : null,
     );
   }
 }
@@ -363,6 +406,7 @@ class _HomeSnapshot {
     required this.available,
     required this.upcoming,
     required this.obligationsById,
+    required this.actualSpentByInstance,
   });
 
   final Money total;
@@ -370,4 +414,6 @@ class _HomeSnapshot {
   final Money available;
   final List<ObligationInstance> upcoming;
   final Map<String, Obligation> obligationsById;
+
+  final Map<String, Money> actualSpentByInstance;
 }
