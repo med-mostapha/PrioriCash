@@ -327,6 +327,7 @@ void main() {
     test('undoing a savings-goal allocation is also exact', () {
       final goal = SavingsGoal(
         id: 'goal-1',
+        name: 'Emergency Fund',
         targetAmount: Money.fromMinor(100000),
         currentAmount: Money.fromMinor(20000),
         priority: Priority.medium,
