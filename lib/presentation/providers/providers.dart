@@ -52,3 +52,7 @@ final allocationEngineProvider = Provider<AllocationEngine>(
 final balanceCalculatorProvider = Provider<BalanceCalculator>(
   (ref) => const BalanceCalculator(),
 );
+
+final expenseRepositoryProvider = Provider<DriftExpenseRepository>(
+  (ref) => DriftExpenseRepository(ref.watch(appDatabaseProvider)),
+);

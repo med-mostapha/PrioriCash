@@ -74,5 +74,15 @@
   "purchaseVerdictBreaksTitle": "هذا سيُخلّ بالتزاماتك",
   "purchaseVerdictBreaksDetail": "هذه الالتزامات ستبقى غير ممولة:",
   "purchaseNoAvailableSnapshot": "الأرصدة لسه قيد التحميل — حاول بعد لحظة.",
-  "purchaseVerdictBreaksEmptyDetail": "هذا يتجاوز المتاح، رغم إنه ما عندك التزامات غير ممولة حاليًا تحديدًا."
+  "purchaseVerdictBreaksEmptyDetail": "هذا يتجاوز المتاح، رغم إنه ما عندك التزامات غير ممولة حاليًا تحديدًا.",
+  "commitmentsExceedBalance": "الالتزامات تتجاوز رصيدك",
+  "quickAddExpense": "إضافة مصروف سريع",
+  "fieldCategory": "الفئة",
+  "fieldLinkToObligation": "ربط بالتزام (اختياري)",
+  "linkToObligationNone": "بدون ربط — إنفاق حر",
+  "categoryFood": "أكل",
+  "categoryTransport": "مواصلات",
+  "categoryUtilities": "خدمات",
+  "categoryHealth": "صحة",
+  "categoryOther": "أخرى"
 }

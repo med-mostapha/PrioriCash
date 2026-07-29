@@ -20,6 +20,7 @@ import 'package:prioricash/presentation/widgets/primary_action_button.dart';
 import 'package:prioricash/presentation/widgets/secondary_action_button.dart';
 import 'package:prioricash/presentation/screens/add_income_screen.dart';
 import 'package:prioricash/presentation/widgets/purchase_advice_dialog.dart';
+import 'package:prioricash/presentation/screens/quick_add_expense_screen.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -115,6 +116,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _load();
   }
 
+  Future<void> _openQuickAddExpense() async {
+    final snapshot = _snapshot;
+    if (snapshot == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => QuickAddExpenseScreen(
+          linkableInstances: snapshot.upcoming,
+          obligationsById: snapshot.obligationsById,
+        ),
+      ),
+    );
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -129,9 +144,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final snapshot = _snapshot!;
 
-    return Material(
-      color: colors.background,
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: colors.background,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openQuickAddExpense,
+        child: const Icon(Icons.add),
+      ),
+      body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
           child: ListView(

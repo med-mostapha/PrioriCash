@@ -1,7 +1,8 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart'
-    hide Obligation, Allocation, Income;
+    hide Obligation, Allocation, Income, Expense;
+import 'package:prioricash/domain/entities/expense.dart';
 import 'package:prioricash/data/repositories/drift_repositories.dart';
 import 'package:prioricash/domain/entities/allocation.dart';
 import 'package:prioricash/domain/entities/income.dart'
@@ -341,5 +342,70 @@ void main() {
       final ledger = await allocationRepo.getByIncome('inc-1');
       expect(ledger, isEmpty);
     });
+  });
+
+  group('ExpenseRepository', () {
+    late DriftExpenseRepository expenseRepo;
+
+    setUp(() {
+      expenseRepo = DriftExpenseRepository(db);
+    });
+
+    test('insert round-trips all fields, unlinked by default', () async {
+      final expense = Expense(
+        id: 'exp-1',
+        categoryId: CategoryId.food,
+        amount: Money.fromMinor(4000),
+        spentAt: d(2026, 7, 28),
+      );
+
+      await expenseRepo.insert(expense);
+
+      final row =
+          (await db.customSelect('SELECT * FROM expenses').get()).single;
+      expect(row.data['id'], 'exp-1');
+      expect(row.data['category_id'], 'food');
+      expect(row.data['amount_minor'], 4000);
+      expect(row.data['instance_id'], isNull);
+      expect(row.data['is_reconciliation'], 0);
+    });
+
+    test(
+      'insert with an obligation-instance link round-trips correctly',
+      () async {
+        final ob = Obligation(
+          id: 'ob-breakfast',
+          name: 'Breakfast',
+          amount: Money.fromMinor(110000),
+          recurrence: const Recurrence(RecurrenceType.monthly),
+          priority: Priority.medium,
+          startDate: d(2026, 7, 1),
+        );
+        await obligationRepo.upsert(ob);
+        final instances = generator.generate(
+          obligation: ob,
+          horizonEnd: d(2026, 7, 31),
+          existing: const [],
+        );
+        await instanceRepo.insertAll(instances);
+
+        final expense = Expense(
+          id: 'exp-2',
+          categoryId: CategoryId.food,
+          amount: Money.fromMinor(4000),
+          spentAt: d(2026, 7, 28),
+          instanceId: instances.single.id,
+        );
+
+        await expenseRepo.insert(expense);
+
+        final row =
+            (await db
+                    .customSelect("SELECT * FROM expenses WHERE id = 'exp-2'")
+                    .get())
+                .single;
+        expect(row.data['instance_id'], instances.single.id);
+      },
+    );
   });
 }
