@@ -29,6 +29,12 @@ abstract final class AppTypography {
     fontWeight: FontWeight.w500,
   );
 
+  /// List-screen header title (ObligationListScreen, SavingsGoalListScreen).
+  /// Was previously a hardcoded `fontSize: 20` override; see AGENTS.md §2.4.
+  static const listScreenTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w500,
+  );
   static const warning = TextStyle(fontSize: 13);
 
   static const buttonLabel = TextStyle(

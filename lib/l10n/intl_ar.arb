@@ -90,5 +90,12 @@
   "reconciliationActualLabel": "المصروف فعليًا",
   "reconciliationSurplusLabel": "غير منفق — سيُعاد للرصيد المتاح",
   "reconciliationDeficitLabel": "تجاوز الإنفاق المقدّر",
-  "markAsPaid": "تعليم كمدفوع"
+  "markAsPaid": "تعليم كمدفوع",
+  "savingsGoalsSectionTitle": "أهداف الادخار",
+  "savingsGoalsTitle": "أهداف الادخار",
+  "newSavingsGoal": "هدف ادخار جديد",
+  "editSavingsGoal": "تعديل هدف الادخار",
+  "fieldTargetAmount": "المبلغ المستهدف (أوقية)",
+  "fieldCurrentAmount": "المدّخر حاليًا (أوقية)",
+  "noSavingsGoalsYet": "لا توجد أهداف ادخار بعد."
 }

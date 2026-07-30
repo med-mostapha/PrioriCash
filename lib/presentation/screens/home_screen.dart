@@ -22,6 +22,9 @@ import 'package:prioricash/presentation/screens/add_income_screen.dart';
 import 'package:prioricash/presentation/widgets/purchase_advice_dialog.dart';
 import 'package:prioricash/presentation/screens/quick_add_expense_screen.dart';
 import 'package:prioricash/presentation/widgets/reconciliation_dialog.dart';
+import 'package:prioricash/domain/entities/savings_goal.dart';
+import 'package:prioricash/presentation/screens/savings_goal_list_screen.dart';
+import 'package:prioricash/presentation/widgets/savings_goal_tile.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -66,6 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final calculator = ref.read(balanceCalculatorProvider);
 
     final obligations = await obligationRepo.getActive();
+    final goalRepo = ref.read(savingsGoalRepositoryProvider);
+    final goals = await goalRepo.getActive();
     final fundable = await instanceRepo.getFundable(_horizonEnd);
     // SW-18: fully funded but not yet confirmed paid — still needs
     // attention (reconciliation) and still reserves whatever hasn't
@@ -96,6 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         reserved: reserved,
         available: available,
         upcoming: upcoming,
+        goals: goals,
         obligationsById: {for (final o in obligations) o.id: o},
         actualSpentByInstance: actualSpentByInstance,
       );
@@ -106,6 +112,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _openObligations() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => const ObligationListScreen()),
+    );
+    await _load();
+  }
+
+  Future<void> _openSavingsGoals() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const SavingsGoalListScreen()),
     );
     await _load();
   }
@@ -289,6 +302,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     snapshot.obligationsById,
                     i == snapshot.upcoming.length - 1,
                   ),
+              const SizedBox(height: AppSpacing.gapSection),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.savingsGoalsSectionTitle,
+                    style: AppTypography.sectionLabel.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _openSavingsGoals,
+                    child: Text(
+                      l10n.manage,
+                      style: AppTypography.topBarDate.copyWith(
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.gapMedium),
+              if (snapshot.goals.isEmpty)
+                Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(
+                    vertical: AppSpacing.lg,
+                  ),
+                  child: Text(
+                    l10n.noSavingsGoalsYet,
+                    style: AppTypography.listItemCaption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                )
+              else
+                for (var i = 0; i < snapshot.goals.length; i++)
+                  SavingsGoalTile(
+                    name: snapshot.goals[i].name,
+                    targetAmount: snapshot.goals[i].targetAmount,
+                    currentAmount: snapshot.goals[i].currentAmount,
+                    isLast: i == snapshot.goals.length - 1,
+                  ),
             ],
           ),
         ),
@@ -407,6 +462,7 @@ class _HomeSnapshot {
     required this.upcoming,
     required this.obligationsById,
     required this.actualSpentByInstance,
+    required this.goals,
   });
 
   final Money total;
@@ -414,6 +470,7 @@ class _HomeSnapshot {
   final Money available;
   final List<ObligationInstance> upcoming;
   final Map<String, Obligation> obligationsById;
+  final List<SavingsGoal> goals;
 
   final Map<String, Money> actualSpentByInstance;
 }
