@@ -90,9 +90,8 @@ class _ObligationListScreenState extends ConsumerState<ObligationListScreen> {
                       ),
                       Text(
                         l10n.obligationsTitle,
-                        style: AppTypography.summaryValue.copyWith(
+                        style: AppTypography.listScreenTitle.copyWith(
                           color: colors.textPrimary,
-                          fontSize: 20,
                         ),
                       ),
                     ],

@@ -142,5 +142,12 @@
   "reconciliationActualLabel": "Actually spent",
   "reconciliationSurplusLabel": "Unspent — will be released back to your balance",
   "reconciliationDeficitLabel": "Overspent beyond the estimate",
-  "markAsPaid": "Mark as paid"
+  "markAsPaid": "Mark as paid",
+  "savingsGoalsSectionTitle": "SAVINGS GOALS",
+  "savingsGoalsTitle": "Savings Goals",
+  "newSavingsGoal": "New savings goal",
+  "editSavingsGoal": "Edit savings goal",
+  "fieldTargetAmount": "TARGET AMOUNT (MRU)",
+  "fieldCurrentAmount": "SAVED SO FAR (MRU)",
+  "noSavingsGoalsYet": "No savings goals yet."
 }

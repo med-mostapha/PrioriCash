@@ -50,14 +50,16 @@ void main() {
     );
   }
 
-  SavingsGoal goal({
+SavingsGoal goal({
     required String id,
+    String name = 'Test Goal',
     int targetMinor = 100000,
     int currentMinor = 0,
     Priority priority = Priority.medium,
   }) {
     return SavingsGoal(
       id: id,
+      name: name,
       targetAmount: Money.fromMinor(targetMinor),
       currentAmount: Money.fromMinor(currentMinor),
       priority: priority,

@@ -2,22 +2,28 @@ import 'package:meta/meta.dart';
 import 'package:prioricash/domain/entities/obligation.dart' show Priority;
 import 'package:prioricash/domain/value_objects/money.dart';
 
-/// Minimal savings-goal shape needed by [AllocationEngine].
+/// A savings target the person is working toward — SW-19 (full CRUD
+/// shape, expanded from the SW-6 minimal version).
 ///
-/// This is deliberately not the full entity from the domain model (no
-/// name, no CRUD, no isActive) — that lands in SW-19 per the backlog. Only
-/// what the engine needs to decide how much surplus a goal can still
-/// absorb is here.
+/// [AllocationEngine] only ever reads targetAmount/currentAmount/priority
+/// (see remainingCapacity()) — name and isActive exist purely for the
+/// CRUD screen and for deactivating a goal without losing its funding
+/// history, same rationale as Obligation.isActive (R16).
 @immutable
 class SavingsGoal {
   SavingsGoal({
     required this.id,
+    required this.name,
     required this.targetAmount,
     required this.currentAmount,
     required this.priority,
+    this.isActive = true,
   }) {
     if (id.isEmpty) {
       throw ArgumentError.value(id, 'id', 'must not be empty');
+    }
+    if (name.trim().isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be empty');
     }
     if (targetAmount.isZero || targetAmount.isNegative) {
       throw ArgumentError.value(
@@ -36,9 +42,14 @@ class SavingsGoal {
   }
 
   final String id;
+  final String name;
   final Money targetAmount;
   final Money currentAmount;
   final Priority priority;
+
+  /// Deactivated goals stop receiving new allocations but keep their
+  /// funding history — mirrors Obligation.isActive (R16).
+  final bool isActive;
 
   bool get isReached => !currentAmount.compareTo(targetAmount).isNegative;
 
@@ -48,7 +59,26 @@ class SavingsGoal {
   Money remainingCapacity() =>
       isReached ? Money.zero : targetAmount.subtract(currentAmount);
 
-  /// Entity equality: identity is the id, not progress.
+  SavingsGoal deactivate() => copyWith(isActive: false);
+
+  SavingsGoal copyWith({
+    String? name,
+    Money? targetAmount,
+    Money? currentAmount,
+    Priority? priority,
+    bool? isActive,
+  }) {
+    return SavingsGoal(
+      id: id,
+      name: name ?? this.name,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      priority: priority ?? this.priority,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+
+  /// Entity equality: identity is the id, not progress or name.
   @override
   bool operator ==(Object other) => other is SavingsGoal && other.id == id;
 
@@ -56,5 +86,6 @@ class SavingsGoal {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'SavingsGoal($id, $currentAmount of $targetAmount)';
+  String toString() =>
+      'SavingsGoal($id, $name, $currentAmount of $targetAmount)';
 }

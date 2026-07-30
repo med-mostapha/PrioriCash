@@ -141,8 +141,8 @@ void main() {
         "VALUES ('i-1', 'ob-1', 0, 50000, 0, 0)",
       );
       await db.customStatement(
-        "INSERT INTO savings_goals (id, target_minor, current_minor, priority) "
-        "VALUES ('goal-1', 100000, 0, 1)",
+        "INSERT INTO savings_goals (id, name, target_minor, current_minor, priority) "
+        "VALUES ('goal-1', 'Emergency Fund', 100000, 0, 1)",
       );
     }
 

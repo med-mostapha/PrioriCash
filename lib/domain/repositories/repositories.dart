@@ -43,6 +43,11 @@ abstract class ObligationInstanceRepository {
 
 abstract class SavingsGoalRepository {
   Future<List<SavingsGoal>> getActive();
+  Future<void> upsert(SavingsGoal goal);
+
+  /// Deactivates rather than deletes — same rationale as
+  /// ObligationRepository.deactivate (R16).
+  Future<void> deactivate(String id);
 }
 
 abstract class AllocationRepository {

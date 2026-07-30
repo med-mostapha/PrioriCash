@@ -1,7 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart'
-    hide Obligation, Allocation, Income, Expense;
+    hide Obligation, Allocation, Income, Expense, SavingsGoal;
 import 'package:prioricash/domain/entities/expense.dart';
 import 'package:prioricash/data/repositories/drift_repositories.dart';
 import 'package:prioricash/domain/entities/allocation.dart';
@@ -12,6 +12,7 @@ import 'package:prioricash/domain/services/allocation_engine.dart';
 import 'package:prioricash/domain/services/instance_generator.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/value_objects/recurrence.dart';
+import 'package:prioricash/domain/entities/savings_goal.dart';
 
 /// SW-11 — Repository tests.
 ///
@@ -541,6 +542,72 @@ void main() {
                     .get())
                 .single;
         expect(row.data['instance_id'], instances.single.id);
+      },
+    );
+  });
+
+  group('SavingsGoalRepository', () {
+    late DriftSavingsGoalRepository goalRepo;
+
+    setUp(() {
+      goalRepo = DriftSavingsGoalRepository(db);
+    });
+
+    test('upsert then getActive round-trips a goal exactly', () async {
+      final goal = SavingsGoal(
+        id: 'goal-1',
+        name: 'Emergency Fund',
+        targetAmount: Money.fromMinor(500000),
+        currentAmount: Money.fromMinor(100000),
+        priority: Priority.medium,
+      );
+
+      await goalRepo.upsert(goal);
+      final result = await goalRepo.getActive();
+
+      expect(result, hasLength(1));
+      expect(result.single.id, equals('goal-1'));
+      expect(result.single.name, equals('Emergency Fund'));
+      expect(result.single.targetAmount, equals(Money.fromMinor(500000)));
+      expect(result.single.currentAmount, equals(Money.fromMinor(100000)));
+    });
+
+    test('upsert on an existing id updates rather than duplicates', () async {
+      final goal = SavingsGoal(
+        id: 'goal-1',
+        name: 'Emergency Fund',
+        targetAmount: Money.fromMinor(500000),
+        currentAmount: Money.fromMinor(100000),
+        priority: Priority.medium,
+      );
+      await goalRepo.upsert(goal);
+
+      final updated = goal.copyWith(currentAmount: Money.fromMinor(250000));
+      await goalRepo.upsert(updated);
+
+      final result = await goalRepo.getActive();
+      expect(result, hasLength(1));
+      expect(result.single.currentAmount, equals(Money.fromMinor(250000)));
+    });
+
+    test(
+      'deactivate excludes the goal from getActive without deleting it',
+      () async {
+        final goal = SavingsGoal(
+          id: 'goal-1',
+          name: 'Emergency Fund',
+          targetAmount: Money.fromMinor(500000),
+          currentAmount: Money.fromMinor(100000),
+          priority: Priority.medium,
+        );
+        await goalRepo.upsert(goal);
+
+        await goalRepo.deactivate('goal-1');
+        final active = await goalRepo.getActive();
+
+        expect(active, isEmpty);
+        final rows = await db.customSelect('SELECT * FROM savings_goals').get();
+        expect(rows, hasLength(1));
       },
     );
   });
