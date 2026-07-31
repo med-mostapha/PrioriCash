@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:prioricash/data/database/tables.dart';
 import 'package:prioricash/domain/entities/expense.dart' show CategoryId;
 import 'package:prioricash/domain/entities/income.dart' show IncomeSourceId;
+import 'package:prioricash/domain/entities/settings.dart' show CurrencyId;
 part 'app_database.g.dart';
 
 /// The app's single Drift database.
@@ -47,8 +48,24 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await _seedIncomeSources(this);
       await _seedCategories(this);
+      await _seedSettings(this);
     },
   );
+
+  /// Inserts the single settings row (id: 1) with defaults matching the
+  /// table's own column defaults — SW-20. Settings is always exactly one
+  /// row; there is no per-user multi-row concept in v1.
+  Future<void> _seedSettings(AppDatabase db) {
+    return db
+        .into(db.settings)
+        .insert(
+          SettingsCompanion.insert(
+            id: const Value(1),
+            horizonDays: const Value(30),
+            currency: Value(CurrencyId.mru.code),
+          ),
+        );
+  }
 
   /// Populates `income_sources` with one row per [IncomeSourceId] member,
   /// run once as part of database creation.
