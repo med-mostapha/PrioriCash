@@ -5,6 +5,7 @@ import 'package:prioricash/domain/entities/savings_goal.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/entities/income.dart';
 import 'package:prioricash/domain/entities/expense.dart';
+import 'package:prioricash/domain/entities/settings.dart';
 
 /// Abstract repository contracts.
 ///
@@ -85,4 +86,12 @@ abstract class ExpenseRepository {
   /// Sum of recorded expenses grouped by linked instanceId — feeds
   /// BalanceCalculator.reservedAmount's actualSpentByInstance (SW-18).
   Future<Map<String, Money>> getTotalsByInstance();
+}
+
+abstract class SettingsRepository {
+  /// Always returns the single settings row — seeded once on database
+  /// creation, so this never returns null in practice.
+  Future<Settings> getSettings();
+
+  Future<void> updateSettings(Settings settings);
 }

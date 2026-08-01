@@ -56,3 +56,7 @@ final balanceCalculatorProvider = Provider<BalanceCalculator>(
 final expenseRepositoryProvider = Provider<DriftExpenseRepository>(
   (ref) => DriftExpenseRepository(ref.watch(appDatabaseProvider)),
 );
+
+final settingsRepositoryProvider = Provider<DriftSettingsRepository>(
+  (ref) => DriftSettingsRepository(ref.watch(appDatabaseProvider)),
+);

@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prioricash/data/database/app_database.dart'
     hide Obligation, Allocation, Income, Expense, SavingsGoal;
+import 'package:prioricash/domain/entities/settings.dart';
 import 'package:prioricash/domain/entities/expense.dart';
 import 'package:prioricash/data/repositories/drift_repositories.dart';
 import 'package:prioricash/domain/entities/allocation.dart';
@@ -610,5 +611,29 @@ void main() {
         expect(rows, hasLength(1));
       },
     );
+  });
+
+  group('SettingsRepository', () {
+    late DriftSettingsRepository settingsRepo;
+
+    setUp(() {
+      settingsRepo = DriftSettingsRepository(db);
+    });
+
+    test('getSettings returns the seeded defaults', () async {
+      final settings = await settingsRepo.getSettings();
+      expect(settings.horizonDays, 30);
+      expect(settings.currency, CurrencyId.mru);
+    });
+
+    test('updateSettings persists both fields', () async {
+      await settingsRepo.updateSettings(
+        Settings(horizonDays: 45, currency: CurrencyId.usd),
+      );
+
+      final settings = await settingsRepo.getSettings();
+      expect(settings.horizonDays, 45);
+      expect(settings.currency, CurrencyId.usd);
+    });
   });
 }

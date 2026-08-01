@@ -9,6 +9,7 @@ import 'package:prioricash/domain/value_objects/money.dart';
 import 'package:prioricash/domain/value_objects/recurrence.dart' as domain;
 import 'package:prioricash/domain/entities/income.dart' as domain;
 import 'package:prioricash/domain/entities/expense.dart' as domain;
+import 'package:prioricash/domain/entities/settings.dart' as domain;
 
 /// Drift implementations of the domain repository interfaces.
 ///
@@ -382,5 +383,31 @@ class DriftBalanceRepository implements BalanceRepository {
     final income = incomeTotal.data['total'] as int;
     final expense = expenseTotal.data['total'] as int;
     return Money.fromMinor(income).subtract(Money.fromMinor(expense));
+  }
+}
+
+class DriftSettingsRepository implements SettingsRepository {
+  DriftSettingsRepository(this._db);
+  final AppDatabase _db;
+
+  @override
+  Future<domain.Settings> getSettings() async {
+    final row = await (_db.select(
+      _db.settings,
+    )..where((t) => t.id.equals(1))).getSingle();
+    return domain.Settings(
+      horizonDays: row.horizonDays,
+      currency: domain.CurrencyId.fromCode(row.currency),
+    );
+  }
+
+  @override
+  Future<void> updateSettings(domain.Settings settings) {
+    return (_db.update(_db.settings)..where((t) => t.id.equals(1))).write(
+      SettingsCompanion(
+        horizonDays: Value(settings.horizonDays),
+        currency: Value(settings.currency.code),
+      ),
+    );
   }
 }

@@ -25,6 +25,7 @@ import 'package:prioricash/presentation/widgets/reconciliation_dialog.dart';
 import 'package:prioricash/domain/entities/savings_goal.dart';
 import 'package:prioricash/presentation/screens/savings_goal_list_screen.dart';
 import 'package:prioricash/presentation/widgets/savings_goal_tile.dart';
+import 'package:prioricash/presentation/screens/settings_screen.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -45,10 +46,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  static const _horizonDays = 30;
-
   _HomeSnapshot? _snapshot;
   bool _isLoading = true;
+  int _horizonDays = 30; // overwritten by Settings on first load — SW-20
 
   @override
   void initState() {
@@ -57,10 +57,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   DateTime get _today => DateTime.now();
-  DateTime get _horizonEnd => _today.add(const Duration(days: _horizonDays));
+  DateTime get _horizonEnd => _today.add(Duration(days: _horizonDays));
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
+
+    final settingsRepo = ref.read(settingsRepositoryProvider);
+    final settings = await settingsRepo.getSettings();
+    _horizonDays = settings.horizonDays;
 
     final obligationRepo = ref.read(obligationRepositoryProvider);
     final instanceRepo = ref.read(obligationInstanceRepositoryProvider);
@@ -176,6 +180,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _load();
   }
 
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+    );
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -202,7 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: ListView(
             padding: AppSpacing.screenPadding,
             children: [
-              _TopBar(onRefresh: _load),
+              _TopBar(onRefresh: _load, onSettings: _openSettings),
               const SizedBox(height: AppSpacing.gapSection),
               Text(
                 l10n.availableToSpend,
@@ -395,9 +406,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onRefresh});
+  const _TopBar({required this.onRefresh, required this.onSettings});
 
   final VoidCallback onRefresh;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -442,12 +454,24 @@ class _TopBar extends StatelessWidget {
           dateLabel,
           style: AppTypography.topBarDate.copyWith(color: colors.textSecondary),
         ),
-        GestureDetector(
-          onTap: onRefresh,
-          child: Text(
-            l10n.refresh,
-            style: AppTypography.topBarDate.copyWith(color: colors.primary),
-          ),
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.settings_outlined, color: colors.textSecondary),
+              onPressed: onSettings,
+              iconSize: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            GestureDetector(
+              onTap: onRefresh,
+              child: Text(
+                l10n.refresh,
+                style: AppTypography.topBarDate.copyWith(color: colors.primary),
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -4,6 +4,7 @@ import 'package:prioricash/data/database/app_database.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:prioricash/domain/entities/expense.dart' show CategoryId;
 import 'package:prioricash/domain/entities/income.dart' show IncomeSourceId;
+import 'package:prioricash/domain/entities/settings.dart' show CurrencyId;
 
 /// SW-10 — schema-level tests.
 ///
@@ -277,5 +278,18 @@ void main() {
         expect(rows, hasLength(1));
       },
     );
+  });
+
+  group('settings is seeded on creation — SW-20', () {
+    test('contains exactly one row with the documented defaults', () async {
+      final rows = await db
+          .customSelect('SELECT id, horizon_days, currency FROM settings')
+          .get();
+
+      expect(rows, hasLength(1));
+      expect(rows.single.data['id'], 1);
+      expect(rows.single.data['horizon_days'], 30);
+      expect(rows.single.data['currency'], CurrencyId.mru.code);
+    });
   });
 }

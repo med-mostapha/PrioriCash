@@ -10,6 +10,8 @@ import 'package:prioricash/presentation/theme/app_colors.dart';
 import 'package:prioricash/presentation/theme/app_spacing.dart';
 import 'package:prioricash/presentation/theme/app_typography.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
+import 'package:prioricash/presentation/widgets/form_field_label.dart';
+import 'package:prioricash/presentation/widgets/segmented_choice.dart';
 
 /// SW-17 — the quick-add-expense form. Traces UC-08.
 ///
@@ -149,15 +151,15 @@ class _QuickAddExpenseScreenState extends ConsumerState<QuickAddExpenseScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.fieldCategory),
-                      _SegmentedChoice<CategoryId>(
+                      FormFieldLabel(l10n.fieldCategory),
+                      SegmentedChoice<CategoryId>(
                         value: _categoryId,
                         options: categoryLabels,
                         onChanged: (value) =>
                             setState(() => _categoryId = value),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldAmount),
+                      FormFieldLabel(l10n.fieldAmount),
                       TextFormField(
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -181,7 +183,7 @@ class _QuickAddExpenseScreenState extends ConsumerState<QuickAddExpenseScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldReceivedDate),
+                      FormFieldLabel(l10n.fieldReceivedDate),
                       InkWell(
                         onTap: _pickSpentAt,
                         child: Container(
@@ -203,7 +205,7 @@ class _QuickAddExpenseScreenState extends ConsumerState<QuickAddExpenseScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldLinkToObligation),
+                      FormFieldLabel(l10n.fieldLinkToObligation),
                       DropdownButtonFormField<String?>(
                         initialValue: _linkedInstanceId,
                         dropdownColor: colors.background,
@@ -258,65 +260,6 @@ class _QuickAddExpenseScreenState extends ConsumerState<QuickAddExpenseScreen> {
       errorBorder: UnderlineInputBorder(
         borderSide: BorderSide(color: colors.danger),
       ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
-      child: Text(
-        text,
-        style: AppTypography.sectionLabel.copyWith(color: colors.textSecondary),
-      ),
-    );
-  }
-}
-
-class _SegmentedChoice<T> extends StatelessWidget {
-  const _SegmentedChoice({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: options.entries.map((entry) {
-        final selected = entry.key == value;
-        return ChoiceChip(
-          label: Text(entry.value),
-          selected: selected,
-          onSelected: (_) => onChanged(entry.key),
-          backgroundColor: colors.background,
-          selectedColor: colors.primary,
-          labelStyle: TextStyle(
-            color: selected ? colors.textPrimary : colors.textSecondary,
-          ),
-          side: BorderSide(
-            color: selected ? colors.primary : colors.divider,
-            width: AppSpacing.dividerWidth,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
-        );
-      }).toList(),
     );
   }
 }
