@@ -26,6 +26,7 @@ import 'package:prioricash/domain/entities/savings_goal.dart';
 import 'package:prioricash/presentation/screens/savings_goal_list_screen.dart';
 import 'package:prioricash/presentation/widgets/savings_goal_tile.dart';
 import 'package:prioricash/presentation/screens/settings_screen.dart';
+import 'package:prioricash/presentation/screens/income_history_screen.dart';
 
 /// SW-16 — the home screen. Traces UC-06 (view balances).
 ///
@@ -187,6 +188,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _load();
   }
 
+  Future<void> _openIncomeHistory() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const IncomeHistoryScreen()),
+    );
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -213,7 +221,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: ListView(
             padding: AppSpacing.screenPadding,
             children: [
-              _TopBar(onRefresh: _load, onSettings: _openSettings),
+              _TopBar(
+                onRefresh: _load,
+                onSettings: _openSettings,
+                onIncomeHistory: _openIncomeHistory,
+              ),
               const SizedBox(height: AppSpacing.gapSection),
               Text(
                 l10n.availableToSpend,
@@ -406,10 +418,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onRefresh, required this.onSettings});
+  const _TopBar({
+    required this.onRefresh,
+    required this.onSettings,
+    required this.onIncomeHistory,
+  });
 
   final VoidCallback onRefresh;
   final VoidCallback onSettings;
+  final VoidCallback onIncomeHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -456,6 +473,14 @@ class _TopBar extends StatelessWidget {
         ),
         Row(
           children: [
+            IconButton(
+              icon: Icon(Icons.history, color: colors.textSecondary),
+              onPressed: onIncomeHistory,
+              iconSize: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: AppSpacing.sm),
             IconButton(
               icon: Icon(Icons.settings_outlined, color: colors.textSecondary),
               onPressed: onSettings,

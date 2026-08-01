@@ -153,5 +153,11 @@
   "settingsTitle": "Settings",
   "fieldHorizonDays": "RESERVATION HORIZON (DAYS)",
   "fieldCurrencyPreference": "CURRENCY",
-  "currencyNotYetActiveNote": "Saved, but doesn't affect new amounts yet."
+"currencyNotYetActiveNote": "Saved, but doesn't affect new amounts yet.",
+  "incomeHistoryTitle": "Income History",
+  "noIncomeYet": "No income recorded yet.",
+  "undo": "Undo",
+  "undoConfirmTitle": "Undo this income?",
+  "undoConfirmDetail": "This reverses its allocations and restores prior funded amounts.",
+  "alreadyUndone": "Already undone"
 }
