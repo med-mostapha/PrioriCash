@@ -101,5 +101,11 @@
   "settingsTitle": "الإعدادات",
   "fieldHorizonDays": "أفق الحجز (أيام)",
   "fieldCurrencyPreference": "العملة",
-  "currencyNotYetActiveNote": "محفوظة، لكنها لا تؤثر على المبالغ الجديدة بعد."
+  "currencyNotYetActiveNote": "محفوظة، لكنها لا تؤثر على المبالغ الجديدة بعد.",
+  "incomeHistoryTitle": "سجل الدخل",
+  "noIncomeYet": "لا يوجد دخل مسجّل بعد.",
+  "undo": "تراجع",
+  "undoConfirmTitle": "تراجع عن هذا الدخل؟",
+  "undoConfirmDetail": "هذا يلغي تخصيصاته ويستعيد المبالغ الممولة السابقة.",
+  "alreadyUndone": "تم التراجع عنه مسبقًا"
 }
