@@ -9,6 +9,9 @@ import 'package:prioricash/presentation/theme/app_colors.dart';
 import 'package:prioricash/presentation/theme/app_spacing.dart';
 import 'package:prioricash/presentation/theme/app_typography.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
+import 'package:prioricash/presentation/widgets/form_field_label.dart';
+import 'package:prioricash/presentation/widgets/segmented_choice.dart';
+
 
 /// SW-14 — the add/edit obligation form. Pushed via Navigator.push from
 /// ObligationListScreen; pops back to it on save.
@@ -140,7 +143,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.fieldName),
+                      FormFieldLabel(l10n.fieldName),
                       TextFormField(
                         controller: _nameController,
                         style: TextStyle(color: colors.textPrimary),
@@ -154,7 +157,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldAmount),
+                      FormFieldLabel(l10n.fieldAmount),
                       TextFormField(
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -178,8 +181,8 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldRecurrence),
-                      _SegmentedChoice<RecurrenceType>(
+                      FormFieldLabel(l10n.fieldRecurrence),
+                      SegmentedChoice<RecurrenceType>(
                         value: _recurrenceType,
                         options: {
                           RecurrenceType.weekly: l10n.recurrenceWeekly,
@@ -189,8 +192,8 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                             setState(() => _recurrenceType = value),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldPriority),
-                      _SegmentedChoice<Priority>(
+                      FormFieldLabel(l10n.fieldPriority),
+                      SegmentedChoice<Priority>(
                         value: _priority,
                         options: {
                           Priority.high: l10n.priorityHigh,
@@ -200,7 +203,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                         onChanged: (value) => setState(() => _priority = value),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldStartDate),
+                      FormFieldLabel(l10n.fieldStartDate),
                       InkWell(
                         onTap: _pickStartDate,
                         child: Container(
@@ -225,7 +228,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _FieldLabel(l10n.fieldEssential),
+                          FormFieldLabel(l10n.fieldEssential),
                           Switch(
                             value: _isEssential,
                             activeThumbColor: colors.primary,
@@ -273,60 +276,3 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   }
 }
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
-      child: Text(
-        text,
-        style: AppTypography.sectionLabel.copyWith(color: colors.textSecondary),
-      ),
-    );
-  }
-}
-
-class _SegmentedChoice<T> extends StatelessWidget {
-  const _SegmentedChoice({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
-    return Wrap(
-      spacing: AppSpacing.sm,
-      children: options.entries.map((entry) {
-        final selected = entry.key == value;
-        return ChoiceChip(
-          label: Text(entry.value),
-          selected: selected,
-          onSelected: (_) => onChanged(entry.key),
-          backgroundColor: colors.background,
-          selectedColor: colors.primary,
-          labelStyle: TextStyle(
-            color: selected ? colors.textPrimary : colors.textSecondary,
-          ),
-          side: BorderSide(
-            color: selected ? colors.primary : colors.divider,
-            width: AppSpacing.dividerWidth,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
-        );
-      }).toList(),
-    );
-  }
-}

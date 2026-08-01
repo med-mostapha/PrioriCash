@@ -9,6 +9,8 @@ import 'package:prioricash/presentation/theme/app_colors.dart';
 import 'package:prioricash/presentation/theme/app_spacing.dart';
 import 'package:prioricash/presentation/theme/app_typography.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
+import 'package:prioricash/presentation/widgets/form_field_label.dart';
+import 'package:prioricash/presentation/widgets/segmented_choice.dart';
 
 /// SW-19 — the add/edit savings-goal form. Pushed via Navigator.push from
 /// SavingsGoalListScreen; pops back to it on save. Mirrors
@@ -127,7 +129,7 @@ class _SavingsGoalFormScreenState extends ConsumerState<SavingsGoalFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.fieldName),
+                      FormFieldLabel(l10n.fieldName),
                       TextFormField(
                         controller: _nameController,
                         style: TextStyle(color: colors.textPrimary),
@@ -138,7 +140,7 @@ class _SavingsGoalFormScreenState extends ConsumerState<SavingsGoalFormScreen> {
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldTargetAmount),
+                      FormFieldLabel(l10n.fieldTargetAmount),
                       TextFormField(
                         controller: _targetController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -162,7 +164,7 @@ class _SavingsGoalFormScreenState extends ConsumerState<SavingsGoalFormScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldCurrentAmount),
+                      FormFieldLabel(l10n.fieldCurrentAmount),
                       TextFormField(
                         controller: _currentController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -186,8 +188,8 @@ class _SavingsGoalFormScreenState extends ConsumerState<SavingsGoalFormScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldPriority),
-                      _SegmentedChoice<Priority>(
+                      FormFieldLabel(l10n.fieldPriority),
+                      SegmentedChoice<Priority>(
                         value: _priority,
                         options: {
                           Priority.high: l10n.priorityHigh,
@@ -231,64 +233,6 @@ class _SavingsGoalFormScreenState extends ConsumerState<SavingsGoalFormScreen> {
       errorBorder: UnderlineInputBorder(
         borderSide: BorderSide(color: colors.danger),
       ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
-      child: Text(
-        text,
-        style: AppTypography.sectionLabel.copyWith(color: colors.textSecondary),
-      ),
-    );
-  }
-}
-
-class _SegmentedChoice<T> extends StatelessWidget {
-  const _SegmentedChoice({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
-    return Wrap(
-      spacing: AppSpacing.sm,
-      children: options.entries.map((entry) {
-        final selected = entry.key == value;
-        return ChoiceChip(
-          label: Text(entry.value),
-          selected: selected,
-          onSelected: (_) => onChanged(entry.key),
-          backgroundColor: colors.background,
-          selectedColor: colors.primary,
-          labelStyle: TextStyle(
-            color: selected ? colors.textPrimary : colors.textSecondary,
-          ),
-          side: BorderSide(
-            color: selected ? colors.primary : colors.divider,
-            width: AppSpacing.dividerWidth,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
-        );
-      }).toList(),
     );
   }
 }
