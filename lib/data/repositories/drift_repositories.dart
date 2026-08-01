@@ -73,6 +73,24 @@ class DriftIncomeRepository implements IncomeRepository {
           ),
         );
   }
+
+  @override
+  Future<List<domain.Income>> getAll() async {
+    final rows = await (_db.select(
+      _db.incomes,
+    )..orderBy([(t) => OrderingTerm.desc(t.receivedAt)])).get();
+    return rows
+        .map(
+          (row) => domain.Income(
+            id: row.id,
+            sourceId: domain.IncomeSourceId.values.byName(row.sourceId),
+            amount: Money.fromMinor(row.amountMinor),
+            receivedAt: row.receivedAt,
+            note: row.note,
+          ),
+        )
+        .toList();
+  }
 }
 
 class DriftObligationRepository implements ObligationRepository {

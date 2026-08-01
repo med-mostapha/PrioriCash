@@ -149,7 +149,32 @@ void main() {
         expect(row.data['note'], 'logo design job');
       },
     );
+
+    test('getAll returns every income, newest first', () async {
+      final older = Income(
+        id: 'inc-1',
+        sourceId: IncomeSourceId.grant,
+        amount: Money.fromMinor(50000),
+        receivedAt: d(2026, 7, 1),
+      );
+      final newer = Income(
+        id: 'inc-2',
+        sourceId: IncomeSourceId.freelance,
+        amount: Money.fromMinor(30000),
+        receivedAt: d(2026, 7, 20),
+      );
+      await incomeRepo.insert(older);
+      await incomeRepo.insert(newer);
+
+      final result = await incomeRepo.getAll();
+
+      expect(result, hasLength(2));
+      expect(result.first.id, 'inc-2');
+      expect(result.last.id, 'inc-1');
+    });
   });
+
+  
 
   group('ObligationInstanceRepository — R3/R4', () {
     test(

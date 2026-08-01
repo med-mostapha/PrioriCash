@@ -78,6 +78,10 @@ abstract class IncomeRepository {
   /// exist as a row in income_sources — seeded once when the database is
   /// created (see app_database.dart's onCreate).
   Future<void> insert(Income income);
+
+  /// Every recorded income, newest first — SW-21 (undo-from-UI needs a
+  /// list of past incomes to pick from).
+  Future<List<Income>> getAll();
 }
 
 abstract class ExpenseRepository {
