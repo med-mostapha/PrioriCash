@@ -8,6 +8,8 @@ import 'package:prioricash/presentation/theme/app_colors.dart';
 import 'package:prioricash/presentation/theme/app_spacing.dart';
 import 'package:prioricash/presentation/theme/app_typography.dart';
 import 'package:prioricash/presentation/widgets/primary_action_button.dart';
+import 'package:prioricash/presentation/widgets/form_field_label.dart';
+import 'package:prioricash/presentation/widgets/segmented_choice.dart';
 
 /// SW-15 — the add-income form. Pushed via Navigator.push from HomeScreen;
 /// pops back to it on save.
@@ -27,8 +29,6 @@ class AddIncomeScreen extends ConsumerStatefulWidget {
 }
 
 class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
-  static const _horizonDays = 30;
-
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
@@ -36,6 +36,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
   IncomeSourceId _sourceId = IncomeSourceId.grant;
   DateTime _receivedAt = DateTime.now();
   bool _isSaving = false;
+  int _horizonDays = 30; // overwritten by Settings before use — SW-20
 
   @override
   void dispose() {
@@ -44,8 +45,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
     super.dispose();
   }
 
-  DateTime get _horizonEnd =>
-      DateTime.now().add(const Duration(days: _horizonDays));
+  DateTime get _horizonEnd => DateTime.now().add(Duration(days: _horizonDays));
 
   Future<void> _pickReceivedDate() async {
     final picked = await showDatePicker(
@@ -61,6 +61,10 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
+
+    final settingsRepo = ref.read(settingsRepositoryProvider);
+    final settings = await settingsRepo.getSettings();
+    _horizonDays = settings.horizonDays;
 
     final amount = Money.parse(_amountController.text.trim());
     final income = Income(
@@ -163,14 +167,14 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.fieldSource),
-                      _SegmentedChoice<IncomeSourceId>(
+                      FormFieldLabel(l10n.fieldSource),
+                      SegmentedChoice<IncomeSourceId>(
                         value: _sourceId,
                         options: sourceLabels,
                         onChanged: (value) => setState(() => _sourceId = value),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldAmount),
+                      FormFieldLabel(l10n.fieldAmount),
                       TextFormField(
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -194,7 +198,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldReceivedDate),
+                      FormFieldLabel(l10n.fieldReceivedDate),
                       InkWell(
                         onTap: _pickReceivedDate,
                         child: Container(
@@ -216,7 +220,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.gapLarge),
-                      _FieldLabel(l10n.fieldNote),
+                      FormFieldLabel(l10n.fieldNote),
                       TextFormField(
                         controller: _noteController,
                         style: TextStyle(color: colors.textPrimary),
@@ -257,65 +261,6 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
       errorBorder: UnderlineInputBorder(
         borderSide: BorderSide(color: colors.danger),
       ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
-      child: Text(
-        text,
-        style: AppTypography.sectionLabel.copyWith(color: colors.textSecondary),
-      ),
-    );
-  }
-}
-
-class _SegmentedChoice<T> extends StatelessWidget {
-  const _SegmentedChoice({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: options.entries.map((entry) {
-        final selected = entry.key == value;
-        return ChoiceChip(
-          label: Text(entry.value),
-          selected: selected,
-          onSelected: (_) => onChanged(entry.key),
-          backgroundColor: colors.background,
-          selectedColor: colors.primary,
-          labelStyle: TextStyle(
-            color: selected ? colors.textPrimary : colors.textSecondary,
-          ),
-          side: BorderSide(
-            color: selected ? colors.primary : colors.divider,
-            width: AppSpacing.dividerWidth,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
-        );
-      }).toList(),
     );
   }
 }

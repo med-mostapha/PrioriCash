@@ -149,5 +149,9 @@
   "editSavingsGoal": "Edit savings goal",
   "fieldTargetAmount": "TARGET AMOUNT (MRU)",
   "fieldCurrentAmount": "SAVED SO FAR (MRU)",
-  "noSavingsGoalsYet": "No savings goals yet."
+  "noSavingsGoalsYet": "No savings goals yet.",
+  "settingsTitle": "Settings",
+  "fieldHorizonDays": "RESERVATION HORIZON (DAYS)",
+  "fieldCurrencyPreference": "CURRENCY",
+  "currencyNotYetActiveNote": "Saved, but doesn't affect new amounts yet."
 }
