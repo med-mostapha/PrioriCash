@@ -161,7 +161,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _load();
   }
 
-  Future<void> _openReconciliation(ObligationInstance instance) async {
+Future<void> _openReconciliation(ObligationInstance instance) async {
     final snapshot = _snapshot;
     if (snapshot == null) return;
     final name =
@@ -169,14 +169,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         instance.obligationId;
     final actualSpent =
         snapshot.actualSpentByInstance[instance.id] ?? Money.zero;
+    // The unrecorded portion — what "paid" claims left the account but
+    // isn't backed by any Expense yet. Fixes the bug where Mark as paid
+    // used to release funded money without Total ever reflecting it.
+    final rawShortfall = instance.amount.subtract(actualSpent);
+    final shortfall = rawShortfall.isNegative ? Money.zero : rawShortfall;
 
     await showReconciliationDialog(
       context,
       obligationName: name,
       estimated: instance.amount,
       actualSpent: actualSpent,
-      onConfirmPaid: () =>
-          ref.read(obligationInstanceRepositoryProvider).markPaid(instance.id),
+      onConfirmPaid: () => ref
+          .read(reconciliationRepositoryProvider)
+          .confirmPaid(instanceId: instance.id, shortfall: shortfall),
     );
     await _load();
   }

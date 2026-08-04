@@ -6,6 +6,7 @@ import 'package:prioricash/domain/entities/obligation_instance.dart' as domain;
 import 'package:prioricash/domain/entities/savings_goal.dart' as domain;
 import 'package:prioricash/domain/repositories/repositories.dart';
 import 'package:prioricash/domain/value_objects/money.dart';
+import 'package:prioricash/domain/value_objects/money.dart' as domain;
 import 'package:prioricash/domain/value_objects/recurrence.dart' as domain;
 import 'package:prioricash/domain/entities/income.dart' as domain;
 import 'package:prioricash/domain/entities/expense.dart' as domain;
@@ -427,5 +428,38 @@ class DriftSettingsRepository implements SettingsRepository {
         currency: Value(settings.currency.code),
       ),
     );
+  }
+}
+
+class DriftReconciliationRepository implements ReconciliationRepository {
+  DriftReconciliationRepository(this._db);
+  final AppDatabase _db;
+
+  @override
+  Future<void> confirmPaid({
+    required String instanceId,
+    required domain.Money shortfall,
+  }) {
+    return _db.transaction(() async {
+      if (!shortfall.isZero) {
+        await _db
+            .into(_db.expenses)
+            .insert(
+              ExpensesCompanion.insert(
+                id: 'reconcile-$instanceId-${DateTime.now().microsecondsSinceEpoch}',
+                categoryId: domain.CategoryId.other.name,
+                amountMinor: shortfall.minorUnits,
+                spentAt: DateTime.now(),
+                instanceId: Value(instanceId),
+                isReconciliation: const Value(true),
+              ),
+            );
+      }
+      await (_db.update(
+        _db.obligationInstances,
+      )..where((t) => t.id.equals(instanceId))).write(
+        const ObligationInstancesCompanion(isPaid: Value(true)),
+      );
+    });
   }
 }

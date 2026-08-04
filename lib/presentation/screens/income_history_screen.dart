@@ -18,7 +18,7 @@ import 'package:prioricash/presentation/utils/money_format.dart';
 /// AllocationRepository.applyReversal() persists it transactionally
 /// (funded/current amounts restored, ledger rows marked isReversed —
 /// never deleted, per AGENTS.md §1.4).
-///
+
 /// All user-facing strings come from S.of(context) — see AGENTS.md §2.6.
 class IncomeHistoryScreen extends ConsumerStatefulWidget {
   const IncomeHistoryScreen({super.key});
@@ -29,6 +29,7 @@ class IncomeHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _IncomeHistoryScreenState extends ConsumerState<IncomeHistoryScreen> {
+
   static const _engine = AllocationEngine();
 
   List<_IncomeRow>? _rows;

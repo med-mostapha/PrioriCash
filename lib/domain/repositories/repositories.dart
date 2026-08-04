@@ -51,6 +51,20 @@ abstract class SavingsGoalRepository {
   Future<void> deactivate(String id);
 }
 
+abstract class ReconciliationRepository {
+  /// Confirms [instanceId] as paid — SW-18/SW-21 fix.
+  ///
+  /// If [shortfall] is non-zero, first records it as an automatic Expense
+  /// (isReconciliation: true) linked to the instance, so Total actually
+  /// reflects the money leaving the account. Only then marks the instance
+  /// paid. Both writes happen in one transaction — a partial result would
+  /// leave Total wrong, which this exists specifically to prevent.
+  Future<void> confirmPaid({
+    required String instanceId,
+    required Money shortfall,
+  });
+}
+
 abstract class AllocationRepository {
   /// Persists [allocations] and applies their effect to the instances and
   /// goals they target, all inside one transaction. An interruption must
