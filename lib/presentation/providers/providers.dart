@@ -60,3 +60,7 @@ final expenseRepositoryProvider = Provider<DriftExpenseRepository>(
 final settingsRepositoryProvider = Provider<DriftSettingsRepository>(
   (ref) => DriftSettingsRepository(ref.watch(appDatabaseProvider)),
 );
+
+final reconciliationRepositoryProvider = Provider<DriftReconciliationRepository>(
+  (ref) => DriftReconciliationRepository(ref.watch(appDatabaseProvider)),
+);

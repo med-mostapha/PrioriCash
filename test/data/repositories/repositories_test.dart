@@ -174,8 +174,6 @@ void main() {
     });
   });
 
-  
-
   group('ObligationInstanceRepository — R3/R4', () {
     test(
       'getFundable includes an overdue instance with no lower date bound',
@@ -659,6 +657,85 @@ void main() {
       final settings = await settingsRepo.getSettings();
       expect(settings.horizonDays, 45);
       expect(settings.currency, CurrencyId.usd);
+    });
+  });
+
+  group('ReconciliationRepository', () {
+    late DriftReconciliationRepository reconciliationRepo;
+
+    setUp(() {
+      reconciliationRepo = DriftReconciliationRepository(db);
+    });
+
+    test(
+      'a non-zero shortfall creates an automatic Expense and marks paid',
+      () async {
+        final ob = Obligation(
+          id: 'ob-1',
+          name: 'Wi-Fi',
+          amount: Money.fromMinor(150000),
+          recurrence: const Recurrence(RecurrenceType.monthly),
+          priority: Priority.high,
+          startDate: d(2026, 7, 1),
+        );
+        await obligationRepo.upsert(ob);
+        final instances = generator.generate(
+          obligation: ob,
+          horizonEnd: d(2026, 7, 31),
+          existing: const [],
+        );
+        final funded = instances.single.applyFunding(Money.fromMinor(150000));
+        await instanceRepo.insertAll([funded]);
+
+        await reconciliationRepo.confirmPaid(
+          instanceId: funded.id,
+          shortfall: Money.fromMinor(150000),
+        );
+
+        final allExpenses = await db
+            .customSelect('SELECT * FROM expenses')
+            .get();
+        final linked = allExpenses.where(
+          (r) => r.data['instance_id'] == funded.id,
+        );
+        expect(linked, hasLength(1));
+        expect(linked.single.data['amount_minor'], 150000);
+        expect(linked.single.data['is_reconciliation'], 1);
+        expect(linked.single.data['category_id'], CategoryId.other.name);
+
+        final updated = await instanceRepo.getFundedUnpaid();
+        expect(updated, isEmpty);
+      },
+    );
+
+    test('a zero shortfall creates no Expense but still marks paid', () async {
+      final ob = Obligation(
+        id: 'ob-1',
+        name: 'Wi-Fi',
+        amount: Money.fromMinor(150000),
+        recurrence: const Recurrence(RecurrenceType.monthly),
+        priority: Priority.high,
+        startDate: d(2026, 7, 1),
+      );
+      await obligationRepo.upsert(ob);
+      final instances = generator.generate(
+        obligation: ob,
+        horizonEnd: d(2026, 7, 31),
+        existing: const [],
+      );
+      final funded = instances.single.applyFunding(Money.fromMinor(150000));
+      await instanceRepo.insertAll([funded]);
+
+      await reconciliationRepo.confirmPaid(
+        instanceId: funded.id,
+        shortfall: Money.zero,
+      );
+
+      final allExpenses = await db.customSelect('SELECT * FROM expenses').get();
+      expect(allExpenses, isEmpty);
+
+      final updated = await instanceRepo.getFundedUnpaid();
+      expect(updated, isEmpty);
     });
   });
 }
